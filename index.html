@@ -3,409 +3,509 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-commerce Products</title>
+    <title>Optimum Nutrition - Home</title>
+
     <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
-    <!-- External JS Files -->
-    <script src="js/categories.js"></script>
-    <script src="js/products.js"></script>
-    <script src="js/ecommerce-core.js"></script>
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Customize primary color
+                        secondary: '#10B981', // Customize secondary color
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- AlpineJS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom CSS -->
+<!--    <link rel="stylesheet" href="css/styles.css">-->
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 <!-- Header -->
-<header class="bg-white shadow-sm">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center">
-            <a href="/" class="text-2xl font-bold text-indigo-600">ShopEase</a>
-        </div>
-        <div class="flex items-center space-x-6">
+<header class="bg-white shadow">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex justify-between items-center">
+            <!-- Logo -->
+            <a href="index.html" class="text-2xl font-bold">
+                <h1 id="logo-text">
+                    <span id="logo-prefix">Optimum</span><span id="logo-highlight" class="text-primary">Nutrition</span>
+                </h1>
+            </a>
+
+            <!-- Navigation - Desktop -->
             <nav class="hidden md:flex space-x-6">
-                <a href="/" class="hover:text-indigo-600 font-medium">Home</a>
-                <a href="#" class="text-indigo-600 font-medium">Products</a>
-                <a href="#" class="hover:text-indigo-600 font-medium">About</a>
-                <a href="#" class="hover:text-indigo-600 font-medium">Contact</a>
+                <a href="index.html" id="nav-home" class="text-gray-800 hover:text-primary transition font-medium">Home</a>
+                <a href="products.html" id="nav-products" class="text-gray-800 hover:text-primary transition">Products</a>
+                <a href="#about" id="nav-about" class="text-gray-800 hover:text-primary transition">About</a>
+                <a href="#testimonials" id="nav-testimonials" class="text-gray-800 hover:text-primary transition">Testimonials</a>
+                <a href="#contact" id="nav-contact" class="text-gray-800 hover:text-primary transition">Contact</a>
             </nav>
-            <div class="relative" x-data="{ isCartOpen: false }">
-                <button @click="isCartOpen = !isCartOpen" class="flex items-center hover:text-indigo-600 relative">
+
+            <!-- Icons -->
+            <div class="flex items-center space-x-4">
+                <!-- Cart icon -->
+                <a href="cart.html" class="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span x-show="$store.cart.getTotalItems() > 0" x-text="$store.cart.getTotalItems()"
-                          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
-                </button>
-                <!-- Mini Cart -->
-                <div x-show="isCartOpen" @click.away="isCartOpen = false" x-cloak
-                     class="absolute right-0 mt-2 w-72 bg-white rounded shadow-lg z-10 p-4">
-                    <h3 class="font-bold mb-2">Your Cart</h3>
-                    <div x-show="$store.cart.items.length === 0" class="py-3 text-center text-gray-500">
-                        Your cart is empty
-                    </div>
-                    <div x-show="$store.cart.items.length > 0">
-                        <div class="max-h-64 overflow-y-auto">
-                            <template x-for="(item, index) in $store.cart.items" :key="index">
-                                <div class="flex items-center py-2 border-b border-gray-100">
-                                    <img :src="item.image" :alt="item.name" class="w-12 h-12 object-cover rounded">
-                                    <div class="ml-3 flex-1">
-                                        <div x-text="item.name" class="text-sm font-medium"></div>
-                                        <div class="flex items-center text-sm text-gray-500">
-                                            <span x-text="item.quantity"></span>
-                                            <span class="mx-1">×</span>
-                                            <span x-text="'$' + item.price.toFixed(2)"></span>
-                                        </div>
-                                    </div>
-                                    <button @click="$store.cart.removeItem(index)" class="text-gray-400 hover:text-red-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="mt-3 flex justify-between">
-                            <span class="font-medium">Total:</span>
-                            <span x-text="$store.cart.getFormattedTotal()" class="font-bold"></span>
-                        </div>
-                        <div class="mt-4 flex space-x-2">
-                            <button @click="$store.cart.clearCart()" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100">
-                                Clear
-                            </button>
-                            <a href="#" class="flex-1 bg-indigo-600 text-white text-center py-1 rounded text-sm hover:bg-indigo-700">
-                                Checkout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button @click="$store.ui.toggleMenu()" class="md:hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
-    </div>
-    <!-- Mobile Menu -->
-    <div x-show="$store.ui.isMenuOpen" x-cloak class="md:hidden bg-white border-t">
-        <div class="container mx-auto px-4 py-3 space-y-3">
-            <a href="/" class="block hover:text-indigo-600">Home</a>
-            <a href="#" class="block text-indigo-600">Products</a>
-            <a href="#" class="block hover:text-indigo-600">About</a>
-            <a href="#" class="block hover:text-indigo-600">Contact</a>
-        </div>
-    </div>
-</header>
+                    <span
+                            x-data
+                            x-show="$store.cart.getTotalItems() > 0"
+                            x-text="$store.cart.getTotalItems()"
+                            class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        </span>
+                </a>
 
-<!-- Product Catalog -->
-<div class="container mx-auto px-4 py-8"
-     x-data="productCatalog({
-            products: PRODUCTS,
-            categories: CATEGORIES,
-            defaultView: 'grid',
-            defaultSort: 'featured'
-         })">
-
-    <!-- Banner -->
-    <div class="bg-indigo-600 rounded-lg mb-8 relative overflow-hidden">
-        <div class="p-8 md:p-12 relative z-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Discover Our Products</h1>
-            <p class="text-indigo-100 max-w-xl mb-6">Browse our collection of high-quality products carefully selected for you.</p>
-            <div class="relative max-w-md">
-                <input x-model="searchQuery" type="text" placeholder="Search products..."
-                       class="w-full py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                <button class="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-50"></div>
-    </div>
-
-    <!-- Filters and Controls -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <!-- Category Filter -->
-        <div class="flex items-center overflow-x-auto pb-2 md:pb-0 gap-2">
-            <button @click="selectedCategory = null"
-                    :class="selectedCategory === null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
-                All Products
-            </button>
-            <!-- Top-level Categories -->
-            <template x-for="category in categoryData.filter(c => c.parent_id === null)" :key="category.id">
-                <button @click="selectedCategory = category.id"
-                        :class="selectedCategory === category.id ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
-                        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
-                    <span x-text="category.name"></span>
-                </button>
-            </template>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <!-- Sort Dropdown -->
-            <div class="relative">
-                <select x-model="sortBy" class="block w-full py-2 pl-3 pr-10 text-sm bg-white border rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                    <option value="featured">Featured</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="name">Name</option>
-                    <option value="rating">Rating</option>
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- View Toggle -->
-            <div class="flex border rounded-md overflow-hidden">
-                <button @click="setView('grid')" :class="view === 'grid' ? 'bg-gray-100' : 'bg-white'" class="p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                </button>
-                <button @click="setView('list')" :class="view === 'list' ? 'bg-gray-100' : 'bg-white'" class="p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Mobile menu button -->
+                <button
+                        @click="$store.ui.toggleMenu()"
+                        class="md:hidden focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
             </div>
         </div>
+
+        <!-- Mobile Navigation -->
+        <nav
+                x-data
+                x-show="$store.ui.isMenuOpen"
+                @click.away="$store.ui.closeMenu()"
+                class="md:hidden py-4">
+            <div class="flex flex-col space-y-3">
+                <a href="index.html" id="nav-mobile-home" class="text-gray-800 hover:text-primary transition font-medium">Home</a>
+                <a href="products.html" id="nav-mobile-products" class="text-gray-800 hover:text-primary transition">Products</a>
+                <a href="#about" id="nav-mobile-about" class="text-gray-800 hover:text-primary transition">About</a>
+                <a href="#testimonials" id="nav-mobile-testimonials" class="text-gray-800 hover:text-primary transition">Testimonials</a>
+                <a href="#contact" id="nav-mobile-contact" class="text-gray-800 hover:text-primary transition">Contact</a>
+            </div>
+        </nav>
     </div>
+</header>
 
-    <!-- Product Display -->
-    <div class="mb-8">
-        <!-- Results count -->
-        <div class="mb-4 text-sm text-gray-500">
-            Showing <span x-text="getFilteredProducts().length"></span> products
-            <span x-show="selectedCategory !== null">
-                    in <span x-text="getCategoryName(selectedCategory)"></span>
-                </span>
-            <span x-show="searchQuery !== ''">
-                    matching "<span x-text="searchQuery"></span>"
-                </span>
-        </div>
-
-        <!-- Grid View -->
-        <div x-show="view === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <template x-for="product in getFilteredProducts()" :key="product.id">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                    <!-- Product image -->
-                    <a :href="'product.html?id=' + product.id" class="block h-48 overflow-hidden">
-                        <img :src="Array.isArray(product.images) ? product.images[0] : product.images"
-                             :alt="product.name"
-                             class="w-full h-full object-cover hover:opacity-90 transition-opacity">
-                    </a>
-
-                    <!-- Product info -->
-                    <div class="p-4">
-                        <!-- Brand -->
-                        <div class="text-xs text-gray-500 uppercase tracking-wider" x-text="product.brand"></div>
-
-                        <!-- Name -->
-                        <a :href="'product.html?id=' + product.id" class="block mt-1 text-sm font-medium hover:text-indigo-600 truncate" x-text="product.name"></a>
-
-                        <!-- Rating -->
-                        <div class="mt-1 flex items-center">
-                            <div class="flex text-yellow-400">
-                                <template x-for="i in 5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" :fill="i <= Math.round(product.rating) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                    </svg>
-                                </template>
-                            </div>
-                            <span class="ml-1 text-xs text-gray-500">
-                                    (<span x-text="product.reviews_count"></span>)
-                                </span>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="mt-2 flex items-center">
-                            <template x-if="product.salePrice">
-                                <div>
-                                    <span class="line-through text-gray-400 text-xs" x-text="'$' + product.base_price.toFixed(2)"></span>
-                                    <span class="ml-1 text-red-600 font-semibold" x-text="'$' + product.salePrice.toFixed(2)"></span>
-                                </div>
-                            </template>
-                            <template x-if="!product.salePrice">
-                                <span class="font-semibold" x-text="'$' + product.base_price.toFixed(2)"></span>
-                            </template>
-                        </div>
-
-                        <!-- Add to cart button -->
-                        <button @click.stop.prevent="$store.cart.addItem(product); $event.target.classList.add('animate-pulse'); setTimeout(() => $event.target.classList.remove('animate-pulse'), 1000)"
-                                class="mt-3 w-full bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            Add to Cart
-                        </button>
+<!-- Main Content -->
+<main class="flex-grow">
+    <!-- Hero Section -->
+    <section id="hero-section" class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <h1 id="hero-heading" class="text-4xl md:text-5xl font-bold mb-4">Fuel Your Performance</h1>
+                    <p id="hero-subheading" class="text-xl mb-6">Premium supplements for optimal health and performance. Scientifically formulated to help you achieve your fitness goals.</p>
+                    <div class="flex space-x-4">
+                        <a href="products.html" id="hero-cta-button" class="bg-white text-primary font-bold py-3 px-8 rounded-full transition hover:bg-gray-100 hover:shadow-lg">Shop Now</a>
+                        <a href="#about" id="hero-secondary-button" class="border-2 border-white text-white font-bold py-3 px-8 rounded-full transition hover:bg-white hover:text-primary">Learn More</a>
                     </div>
                 </div>
-            </template>
+                <div class="md:w-1/2">
+                    <img id="hero-image" src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Premium+Supplements" alt="Premium Supplements" class="rounded-lg shadow-xl">
+                </div>
+            </div>
         </div>
+    </section>
 
-        <!-- List View -->
-        <div x-show="view === 'list'" class="space-y-4">
-            <template x-for="product in getFilteredProducts()" :key="product.id">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                    <div class="flex flex-col md:flex-row">
-                        <!-- Product image -->
-                        <a :href="'product.html?id=' + product.id" class="md:w-1/4 h-48 md:h-auto overflow-hidden">
-                            <img :src="Array.isArray(product.images) ? product.images[0] : product.images"
-                                 :alt="product.name"
-                                 class="w-full h-full object-cover hover:opacity-90 transition-opacity">
-                        </a>
+    <!-- Featured Products Section -->
+    <section id="featured-products" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 id="featured-title" class="text-3xl font-bold text-center mb-12">Featured Products</h2>
 
-                        <!-- Product info -->
-                        <div class="p-4 md:w-3/4 flex flex-col">
-                            <div class="flex-grow">
-                                <!-- Brand -->
-                                <div class="text-xs text-gray-500 uppercase tracking-wider" x-text="product.brand"></div>
+            <div x-data="{
+                    featuredProducts: [],
+                    init() {
+                        // Get 4 featured products
+                        this.featuredProducts = PRODUCTS.filter(p => p.isFeatured).slice(0, 4);
+                    }
+                }" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <template x-for="product in featuredProducts" :key="product.id">
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden flex flex-col">
+                        <a :href="'product.html?id=' + product.id" class="block">
+                            <img :src="product.images[0]" :alt="product.name" class="w-full h-64 object-cover">
 
-                                <!-- Name -->
-                                <a :href="'product.html?id=' + product.id" class="block mt-1 text-lg font-medium hover:text-indigo-600" x-text="product.name"></a>
-
-                                <!-- Rating -->
-                                <div class="mt-1 flex items-center">
-                                    <div class="flex text-yellow-400">
-                                        <template x-for="i in 5">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :fill="i <= Math.round(product.rating) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                            </svg>
-                                        </template>
+                            <div class="p-4 flex-grow">
+                                <h3 x-text="product.name" class="font-bold text-lg mb-2"></h3>
+                                <div x-data="utilities()" class="flex justify-between items-center">
+                                    <p x-text="formatPrice(product.base_price)" class="text-primary font-bold"></p>
+                                    <div class="flex items-center">
+                                        <span x-text="product.rating" class="mr-1"></span>
+                                        <div class="flex">
+                                            <template x-for="i in 5">
+                                                <svg :class="{'text-yellow-500': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                                </svg>
+                                            </template>
+                                        </div>
                                     </div>
-                                    <span class="ml-1 text-sm text-gray-500">
-                                            (<span x-text="product.reviews_count"></span> reviews)
+                                </div>
+                            </div>
+                        </a>
+                        <div class="px-4 pb-4">
+                            <button
+                                    @click="$store.cart.addItem(product, 1, {}); $store.ui.showCartNotification()"
+                                    class="w-full bg-primary text-white py-2 rounded hover:bg-primary-dark transition">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="text-center mt-10">
+                <a href="products.html" id="view-all-products" class="inline-block bg-primary text-white font-bold py-3 px-8 rounded-full transition hover:bg-indigo-700">View All Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Showcase -->
+    <section id="categories-showcase" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 id="categories-title" class="text-3xl font-bold text-center mb-12">Shop By Categories</h2>
+
+            <div x-data="{
+                    featuredCategories: [],
+                    init() {
+                        // Get featured categories
+                        this.featuredCategories = CATEGORIES.filter(c => c.featured).slice(0, 3);
+                    }
+                }" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <template x-for="category in featuredCategories" :key="category.id">
+                    <a :href="'products.html?category=' + category.id" class="block group">
+                        <div class="relative rounded-lg overflow-hidden shadow-md h-80">
+                            <img :src="category.imageUrl" :alt="category.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end p-6">
+                                <div>
+                                    <h3 x-text="category.name" class="text-white text-2xl font-bold mb-1"></h3>
+                                    <p x-text="category.description" class="text-white/80 mb-4"></p>
+                                    <span class="inline-block bg-white text-primary py-2 px-4 rounded-full text-sm font-medium group-hover:bg-primary group-hover:text-white transition-colors">
+                                            Shop Now
                                         </span>
                                 </div>
-
-                                <!-- Description -->
-                                <p class="mt-2 text-sm text-gray-600 line-clamp-2" x-text="product.description"></p>
-
-                                <!-- Product features -->
-                                <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
-                                    <template x-for="(value, key) in product.features" :key="key">
-                                        <div class="text-xs text-gray-500">
-                                            <span x-text="key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); }) + ':'"></span>
-                                            <span x-text="value" class="ml-1 text-gray-700"></span>
-                                        </div>
-                                    </template>
-                                </div>
                             </div>
+                        </div>
+                    </a>
+                </template>
+            </div>
+        </div>
+    </section>
 
-                            <div class="mt-4 flex items-center justify-between">
-                                <!-- Price -->
-                                <div class="flex items-center">
-                                    <template x-if="product.salePrice">
-                                        <div>
-                                            <span class="line-through text-gray-400 text-sm" x-text="'$' + product.base_price.toFixed(2)"></span>
-                                            <span class="ml-1 text-red-600 font-semibold text-lg" x-text="'$' + product.salePrice.toFixed(2)"></span>
-                                        </div>
-                                    </template>
-                                    <template x-if="!product.salePrice">
-                                        <span class="font-semibold text-lg" x-text="'$' + product.base_price.toFixed(2)"></span>
-                                    </template>
-                                </div>
+    <!-- Benefits/Features Section -->
+    <section id="benefits-section" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 id="benefits-title" class="text-3xl font-bold text-center mb-12">Why Choose Optimum Nutrition</h2>
 
-                                <!-- Add to cart button -->
-                                <button @click.stop.prevent="$store.cart.addItem(product); $event.target.classList.add('animate-pulse'); setTimeout(() => $event.target.classList.remove('animate-pulse'), 1000)"
-                                        class="bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                                    Add to Cart
-                                </button>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div id="benefit-1" class="text-center p-6 bg-gray-50 rounded-lg">
+                    <div class="text-primary mb-4 flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                    </div>
+                    <h3 id="benefit-1-title" class="text-xl font-bold mb-3">Premium Quality</h3>
+                    <p id="benefit-1-description" class="text-gray-600">Our supplements are made with the highest quality ingredients and undergo rigorous testing for purity and potency.</p>
+                </div>
+
+                <div id="benefit-2" class="text-center p-6 bg-gray-50 rounded-lg">
+                    <div class="text-primary mb-4 flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                    </div>
+                    <h3 id="benefit-2-title" class="text-xl font-bold mb-3">Science-Backed Formulas</h3>
+                    <p id="benefit-2-description" class="text-gray-600">Our products are developed by nutrition scientists and formulated based on the latest research to maximize results.</p>
+                </div>
+
+                <div id="benefit-3" class="text-center p-6 bg-gray-50 rounded-lg">
+                    <div class="text-primary mb-4 flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 id="benefit-3-title" class="text-xl font-bold mb-3">Fast Delivery</h3>
+                    <p id="benefit-3-description" class="text-gray-600">Get your supplements quickly with our expedited shipping options and enjoy free shipping on orders over $50.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials/Social Proof -->
+    <section id="testimonials" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 id="testimonials-title" class="text-3xl font-bold text-center mb-12">What Our Customers Say</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div id="testimonial-1" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img id="testimonial-1-avatar" src="https://placehold.co/100x100/4F46E5/FFFFFF?text=JS" alt="Customer" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 id="testimonial-1-name" class="font-bold">John S.</h4>
+                            <div class="flex text-yellow-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
                             </div>
                         </div>
                     </div>
+                    <p id="testimonial-1-text" class="text-gray-600">"I've tried many protein powders, but Optimum Nutrition's quality is unmatched. Great taste, mixes well, and I've seen significant improvements in my recovery time."</p>
                 </div>
-            </template>
-        </div>
 
-        <!-- No results message -->
-        <div x-show="getFilteredProducts().length === 0" class="bg-white rounded-lg shadow-sm p-8 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 class="mt-4 text-lg font-semibold text-gray-700">No products found</h3>
-            <p class="mt-2 text-gray-500">Try changing your search or filter criteria</p>
-            <button @click="clearFilters()" class="mt-4 inline-block bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700">
-                Clear All Filters
-            </button>
+                <div id="testimonial-2" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img id="testimonial-2-avatar" src="https://placehold.co/100x100/4F46E5/FFFFFF?text=SR" alt="Customer" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 id="testimonial-2-name" class="font-bold">Sarah R.</h4>
+                            <div class="flex text-yellow-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="testimonial-2-text" class="text-gray-600">"The multivitamins from Optimum Nutrition have become an essential part of my daily routine. I've noticed a significant boost in my energy levels and overall wellbeing."</p>
+                </div>
+
+                <div id="testimonial-3" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img id="testimonial-3-avatar" src="https://placehold.co/100x100/4F46E5/FFFFFF?text=MT" alt="Customer" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 id="testimonial-3-name" class="font-bold">Mike T.</h4>
+                            <div class="flex text-yellow-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-gray-300">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="testimonial-3-text" class="text-gray-600">"The pre-workout supplement gave me the extra energy I needed for my intense training sessions. No jitters or crashes - just clean, sustained energy. Highly recommend!"</p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!-- Newsletter Signup -->
+    <section id="newsletter" class="py-16 bg-primary text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 id="newsletter-title" class="text-3xl font-bold mb-6">Join Our Community</h2>
+                <p id="newsletter-description" class="text-white/80 mb-8">Subscribe to our newsletter for exclusive offers, fitness tips, and new product announcements.</p>
+
+                <form id="newsletter-form" class="flex flex-col md:flex-row gap-4">
+                    <input type="email" id="newsletter-email" placeholder="Your email address" class="flex-grow py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-white text-gray-800">
+                    <button type="submit" id="newsletter-submit" class="bg-white text-primary font-bold py-3 px-8 rounded hover:bg-gray-100 transition">Subscribe</button>
+                </form>
+
+                <p id="newsletter-disclaimer" class="mt-4 text-sm text-white/70">By subscribing, you agree to our Privacy Policy and consent to receive marketing emails.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-8 md:mb-0 md:pr-8">
+                    <img id="about-image" src="https://placehold.co/600x400/4F46E5/FFFFFF?text=Our+Story" alt="About Our Company" class="rounded-lg shadow-lg">
+                </div>
+                <div class="md:w-1/2">
+                    <h2 id="about-title" class="text-3xl font-bold mb-6">About Optimum Nutrition</h2>
+                    <p id="about-description-1" class="text-gray-600 mb-4">Founded in 2010, Optimum Nutrition has been dedicated to providing the highest quality supplements to help our customers achieve their fitness and health goals.</p>
+                    <p id="about-description-2" class="text-gray-600 mb-4">We believe that proper nutrition is the foundation of a healthy lifestyle, and our mission is to create premium products that support your journey to optimal health and performance.</p>
+                    <p id="about-description-3" class="text-gray-600 mb-6">Our team of nutrition experts and scientists work tirelessly to develop innovative formulas using only the purest ingredients, ensuring that every product meets our strict quality standards.</p>
+                    <a href="#" id="about-cta" class="inline-block bg-primary text-white font-bold py-3 px-8 rounded-full transition hover:bg-indigo-700">Learn More About Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
 <!-- Footer -->
-<footer class="bg-gray-800 text-white py-12">
-    <div class="container mx-auto px-4">
+<footer class="bg-gray-800 text-white">
+    <div class="container mx-auto px-4 py-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Footer Column 1 -->
             <div>
-                <h3 class="text-lg font-semibold mb-4">Shop</h3>
-                <ul class="space-y-2">
-                    <li><a href="#" class="text-gray-300 hover:text-white">New Arrivals</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Best Sellers</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Deals & Promotions</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Gift Cards</a></li>
+                <h3 id="footer-heading-1" class="text-xl font-bold mb-4">About Us</h3>
+                <p id="footer-about-text" class="text-gray-300">
+                    Optimum Nutrition provides premium supplements for fitness enthusiasts and health-conscious individuals. Our commitment to quality and science-backed formulations sets us apart in the industry.
+                </p>
+            </div>
+
+            <!-- Footer Column 2 -->
+            <div>
+                <h3 id="footer-heading-2" class="text-xl font-bold mb-4">Quick Links</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li><a href="index.html" id="footer-link-home" class="hover:text-primary transition">Home</a></li>
+                    <li><a href="products.html" id="footer-link-products" class="hover:text-primary transition">Products</a></li>
+                    <li><a href="cart.html" id="footer-link-cart" class="hover:text-primary transition">Cart</a></li>
+                    <li><a href="#about" id="footer-link-about" class="hover:text-primary transition">About Us</a></li>
+                    <li><a href="#" id="footer-link-privacy" class="hover:text-primary transition">Privacy Policy</a></li>
+                    <li><a href="#" id="footer-link-terms" class="hover:text-primary transition">Terms of Service</a></li>
                 </ul>
             </div>
+
+            <!-- Footer Column 3 -->
             <div>
-                <h3 class="text-lg font-semibold mb-4">Customer Service</h3>
-                <ul class="space-y-2">
-                    <li><a href="#" class="text-gray-300 hover:text-white">Contact Us</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Shipping & Returns</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">FAQ</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Size Guide</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="text-lg font-semibold mb-4">Stay Connected</h3>
-                <p class="text-gray-300 mb-4">Subscribe to our newsletter for updates on new products and special promotions.</p>
-                <form class="flex">
-                    <input type="email" placeholder="Your email address" class="flex-1 px-4 py-2 rounded-l-md focus:outline-none">
-                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700">Subscribe</button>
-                </form>
+                <h3 id="footer-heading-3" class="text-xl font-bold mb-4">Contact Us</h3>
+                <p id="footer-contact-email" class="text-gray-300 mb-2">Email: info@optimumnutrition.com</p>
+                <p id="footer-contact-phone" class="text-gray-300 mb-2">Phone: (555) 123-4567</p>
+                <p id="footer-contact-address" class="text-gray-300 mb-4">Address: 123 Nutrition St, Fitness City, FC 12345</p>
+
+                <div id="footer-social" class="flex space-x-4">
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.03 10.03 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 ShopEase. All rights reserved.</p>
+
+        <!-- Copyright -->
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-300">
+            <p id="footer-copyright">© 2025 Optimum Nutrition. All rights reserved. Website designed with ♥ by DV Team</p>
         </div>
     </div>
 </footer>
 
-<!-- Cart Notification -->
-<div x-show="$store.ui.showCartNotification" x-cloak
-     class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0 transform translate-y-2"
-     x-transition:enter-end="opacity-100 transform translate-y-0"
-     x-transition:leave="transition ease-in duration-300"
-     x-transition:leave-start="opacity-100 transform translate-y-0"
-     x-transition:leave-end="opacity-0 transform translate-y-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+<!-- Back to top button -->
+<button
+        @click="$store.ui.scrollToTop()"
+        class="fixed bottom-4 left-4 bg-primary text-white p-2 rounded-full shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
     </svg>
-    Item added to your cart!
+</button>
+
+<!-- WhatsApp button -->
+<button
+        @click="$store.ui.openWhatsApp('Hello, I have a question about your products.')"
+        class="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded-full shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+</button>
+
+<!-- Cart notification -->
+<div
+        x-data
+        x-show="$store.ui.showCartNotification"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform translate-y-2"
+        class="fixed bottom-20 right-4 bg-green-500 text-white p-4 rounded shadow-lg">
+    Item added to cart!
 </div>
 
-<!-- Scroll To Top Button -->
-<button @click="$store.ui.scrollToTop()"
-        class="fixed bottom-4 right-20 bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
-        x-data="{ showButton: false }"
-        @scroll.window="showButton = window.pageYOffset > 500"
-        x-show="showButton"
-        x-transition.opacity>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
-    </svg>
-</button>
+<!-- Cart sidebar toggle -->
+<div
+        x-data="{ showMiniCart: false }"
+        x-show="$store.cart.getTotalItems() > 0"
+        class="fixed right-4 top-1/2 transform -translate-y-1/2">
+    <button
+            @click="showMiniCart = !showMiniCart"
+            class="bg-primary text-white p-2 rounded-l-full shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <span
+                x-text="$store.cart.getTotalItems()"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            </span>
+    </button>
 
-<!-- WhatsApp Contact Button -->
-<button @click="$store.ui.openWhatsApp('Hello, I have a question about your products.')"
-        class="fixed bottom-20 right-4 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-    </svg>
-</button>
+    <!-- Mini Cart -->
+    <div
+            x-show="showMiniCart"
+            @click.away="showMiniCart = false"
+            class="absolute right-0 w-64 bg-white rounded shadow-xl p-4">
+        <h4 class="font-bold text-lg mb-2">Your Cart</h4>
+
+        <template x-for="(item, index) in $store.cart.items" :key="index">
+            <div class="flex items-center gap-2 py-2 border-b">
+                <img :src="item.image" :alt="item.name" class="w-12 h-12 object-cover">
+                <div class="flex-1">
+                    <p class="text-sm font-medium" x-text="item.name"></p>
+                    <p class="text-xs text-gray-500">
+                        Qty: <span x-text="item.quantity"></span>
+                    </p>
+                </div>
+                <p class="text-sm font-medium" x-text="'$' + (item.price * item.quantity).toFixed(2)"></p>
+            </div>
+        </template>
+
+        <div class="mt-4 flex justify-between items-center">
+            <p class="font-medium">Total:</p>
+            <p class="font-bold" x-text="$store.cart.getFormattedTotal()"></p>
+        </div>
+
+        <a href="cart.html" class="mt-4 block w-full bg-primary text-white text-center py-2 rounded">
+            View Cart
+        </a>
+    </div>
+</div>
+
+<!-- JavaScript Files -->
+<script src="js/categories.js"></script>
+<script src="js/products.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

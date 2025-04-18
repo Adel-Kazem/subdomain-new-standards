@@ -14,6 +14,7 @@ $additionalFiles = [
     'C:\xampp\htdocs\subdomain-new-standards\js\categories.js',
     'C:\xampp\htdocs\subdomain-new-standards\js\products.js',
     'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-core.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\alpine-product-viewer.js',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
 //    'C:\xampp\htdocs\subdomain-shop\js\main.js',
     // Add other important files you want to include
