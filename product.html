@@ -3,48 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - Optimen</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="js/products.js"></script>
-    <script src="js/categories.js"></script>
-    <script src="js/app.js"></script>
+    <title>Optimum Nutrition - Product Details</title>
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Customize primary color
+                        secondary: '#10B981', // Customize secondary color
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- AlpineJS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans" x-data="{ product: null, loading: true }">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 <!-- Header -->
-<header id="main-header" class="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-3">
+<header class="bg-white shadow">
+    <div class="container mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
             <!-- Logo -->
-            <a href="index.html" class="flex items-center">
-                <h1 id="logo-text" class="text-3xl font-bold">
-                    <span id="logo-prefix" class="text-white">Opti</span><span id="logo-highlight" class="text-yellow-400">men</span>
+            <a href="index.html" class="text-2xl font-bold">
+                <h1 id="logo-text">
+                    <span id="logo-prefix">Optimum</span><span id="logo-highlight" class="text-primary">Nutrition</span>
                 </h1>
             </a>
 
-            <!-- Desktop Navigation -->
-            <nav id="desktop-nav" class="hidden md:flex space-x-6">
-                <a href="index.html" id="nav-home" class="hover:text-yellow-400 font-medium transition">Home</a>
-                <a href="products.html" id="nav-products" class="hover:text-yellow-400 font-medium transition">Products</a>
-                <a href="index.html#about" id="nav-about" class="hover:text-yellow-400 font-medium transition">About</a>
-                <a href="index.html#testimonials" id="nav-testimonials" class="hover:text-yellow-400 font-medium transition">Testimonials</a>
+            <!-- Navigation - Desktop -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html" id="nav-home" class="text-gray-800 hover:text-primary transition">Home</a>
+                <a href="products.html" id="nav-products" class="text-gray-800 hover:text-primary transition font-medium">Products</a>
+                <a href="index.html#about" id="nav-about" class="text-gray-800 hover:text-primary transition">About</a>
+                <a href="index.html#testimonials" id="nav-testimonials" class="text-gray-800 hover:text-primary transition">Testimonials</a>
+                <a href="index.html#contact" id="nav-contact" class="text-gray-800 hover:text-primary transition">Contact</a>
             </nav>
 
-            <!-- Cart and Mobile Menu Icons -->
-            <div id="header-icons" class="flex items-center space-x-4">
-                <a href="cart.html" id="cart-icon" class="relative p-2">
+            <!-- Icons -->
+            <div class="flex items-center space-x-4">
+                <!-- Cart icon -->
+                <a href="cart.html" class="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span id="cart-badge"
-                          x-data
-                          x-text="Alpine.store('cart').getTotalItems()"
-                          x-show="Alpine.store('cart').getTotalItems() > 0"
-                          class="absolute -top-1 -right-1 bg-yellow-400 text-blue-900 rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
+                    <span
+                            x-data
+                            x-show="$store.cart.getTotalItems() > 0"
+                            x-text="$store.cart.getTotalItems()"
+                            class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         </span>
                 </a>
-                <button id="mobile-menu-button" class="md:hidden p-2" @click="Alpine.store('ui').toggleMobileMenu()">
+
+                <!-- Mobile menu button -->
+                <button
+                        @click="$store.ui.toggleMenu()"
+                        class="md:hidden focus:outline-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -53,750 +74,881 @@
         </div>
 
         <!-- Mobile Navigation -->
-        <nav id="mobile-nav"
-             x-data
-             x-show="Alpine.store('ui').mobileMenuOpen"
-             x-transition
-             class="md:hidden mt-4 pb-2">
+        <nav
+                x-data
+                x-show="$store.ui.isMenuOpen"
+                @click.away="$store.ui.closeMenu()"
+                class="md:hidden py-4">
             <div class="flex flex-col space-y-3">
-                <a href="index.html" id="mobile-nav-home" class="hover:text-yellow-400 font-medium transition">Home</a>
-                <a href="products.html" id="mobile-nav-products" class="hover:text-yellow-400 font-medium transition">Products</a>
-                <a href="index.html#about" id="mobile-nav-about" class="hover:text-yellow-400 font-medium transition">About</a>
-                <a href="index.html#testimonials" id="mobile-nav-testimonials" class="hover:text-yellow-400 font-medium transition">Testimonials</a>
+                <a href="index.html" id="nav-mobile-home" class="text-gray-800 hover:text-primary transition">Home</a>
+                <a href="products.html" id="nav-mobile-products" class="text-gray-800 hover:text-primary transition font-medium">Products</a>
+                <a href="index.html#about" id="nav-mobile-about" class="text-gray-800 hover:text-primary transition">About</a>
+                <a href="index.html#testimonials" id="nav-mobile-testimonials" class="text-gray-800 hover:text-primary transition">Testimonials</a>
+                <a href="index.html#contact" id="nav-mobile-contact" class="text-gray-800 hover:text-primary transition">Contact</a>
             </div>
         </nav>
     </div>
 </header>
 
-<!-- Loading Spinner -->
-<div id="loading-spinner" x-show="loading" class="flex justify-center items-center py-16">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-700"></div>
-</div>
+<!-- Main Content -->
+<main class="flex-grow container mx-auto px-4 py-8">
+    <!-- Breadcrumbs -->
+    <div id="breadcrumbs" class="text-sm text-gray-500 mb-6">
+        <div x-data="{
+                product: {},
+                categoryNames: [],
+                init() {
+                    // Get product ID from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const productId = parseInt(urlParams.get('id') || '0');
 
-<!-- Product Not Found -->
-<div id="product-not-found" x-show="!loading && !product" class="container mx-auto px-4 py-16 text-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <h2 id="not-found-title" class="text-2xl font-bold mb-4">Product Not Found</h2>
-    <p id="not-found-text" class="mb-6">The product you are looking for does not exist or has been removed.</p>
-    <a href="products.html" class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-6 rounded-lg transition">Browse Products</a>
-</div>
+                    // Find product by ID
+                    this.product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
 
-<!-- Product Detail -->
-<div id="product-detail"
-     x-show="!loading && product"
-     x-data="productView(product)"
-     class="container mx-auto px-4 py-8">
-
-    <!-- Breadcrumb -->
-    <nav id="breadcrumb" class="flex mb-6 text-sm">
-        <a href="index.html" class="text-blue-700 hover:text-blue-900 transition">Home</a>
-        <span class="mx-2">/</span>
-        <a href="products.html" class="text-blue-700 hover:text-blue-900 transition">Products</a>
-        <span class="mx-2">/</span>
-        <span x-text="product.name" class="text-gray-600"></span>
-    </nav>
-
-    <div class="flex flex-col lg:flex-row -mx-4">
-        <!-- Product Image Gallery -->
-        <div id="product-images" class="lg:w-1/2 px-4 mb-8 lg:mb-0">
-            <!-- Main Image -->
-            <div x-ref="imageContainer" class="mb-4 relative overflow-hidden bg-white rounded-lg border border-gray-200">
-                <img
-                        x-ref="mainImage"
-                        :src="productCore.getSelectedImage() || '/api/placeholder/600/600'"
-                        :alt="product.name"
-                        @mousemove="mouseMove"
-                        @mouseenter="mouseEnter"
-                        @mouseleave="mouseLeave"
-                        @touchstart="touchStart"
-                        @touchmove="touchMove"
-                        @touchend="touchEnd"
-                        class="w-full h-auto object-contain aspect-square"
-                >
-            </div>
-
-            <!-- Thumbnails -->
-            <div x-ref="thumbnailsContainer" class="flex flex-wrap gap-2">
-                <template x-for="image in productCore.getAllImages()">
-                    <div
-                            :data-thumbnail="true"
-                            :data-src="image.src"
-                            :data-thumbnail-type="image.type || ''"
-                            :data-option-type="image.optionType || ''"
-                            :data-option-value="image.optionValue || ''"
-                            :data-variant-key="image.variantKey || ''"
-                            @click="selectImage(image.src)"
-                            :class="{'border-blue-700': isSelectedImage(image.src)}"
-                            class="w-16 h-16 rounded cursor-pointer border-2 overflow-hidden transition"
-                    >
-                        <img :src="image.src" :alt="image.label || product.name" class="w-full h-full object-cover">
-                    </div>
+                    // Get category names
+                    if (this.product.categories && this.product.categories.length > 0) {
+                        this.categoryNames = this.product.categories.map(catId => {
+                            const category = CATEGORIES.find(c => c.id === catId);
+                            return category ? category.name : '';
+                        }).filter(name => name !== '');
+                    }
+                }
+            }">
+            <a href="index.html" class="hover:text-primary transition">Home</a>
+            <span class="mx-2">›</span>
+            <a href="products.html" class="hover:text-primary transition">Products</a>
+            <template x-if="categoryNames.length > 0">
+                <template x-for="(category, index) in categoryNames" :key="index">
+                        <span>
+                            <span class="mx-2">›</span>
+                            <a :href="'products.html?category=' + product.categories[index]"
+                               class="hover:text-primary transition"
+                               x-text="category"></a>
+                        </span>
                 </template>
-            </div>
-        </div>
-
-        <!-- Product Info -->
-        <div id="product-info" class="lg:w-1/2 px-4">
-            <h1 id="product-title" x-text="product.name" class="text-3xl font-bold mb-2"></h1>
-
-            <div id="product-meta" class="flex items-center space-x-4 mb-4">
-                <div id="product-rating" class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span x-text="product.rating" class="ml-1"></span>
-                    <span x-text="'(' + product.reviews_count + ' reviews)'" class="text-sm text-gray-500 ml-1"></span>
-                </div>
-                <div id="product-brand" x-show="product.brand" class="text-gray-600">
-                    Brand: <span x-text="product.brand" class="font-medium"></span>
-                </div>
-                <div id="product-sku" class="text-gray-600">
-                    SKU: <span x-text="product.sku" class="font-medium"></span>
-                </div>
-            </div>
-
-            <div id="product-price" class="text-2xl font-bold text-blue-700 mb-4" x-text="formatPrice(productCore.calculateCurrentPrice())"></div>
-
-            <div id="product-description" class="mb-6">
-                <p x-text="product.description" class="text-gray-700"></p>
-            </div>
-
-            <!-- Stock Status -->
-            <div id="stock-status" class="mb-6">
-                <div x-show="productCore.isInStock()" class="flex items-center text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>In Stock</span>
-                    <span x-show="product.stock > 0" x-text="'(' + productCore.getInventoryForSelection() + ' units available)'" class="ml-1 text-sm"></span>
-                </div>
-                <div x-show="!productCore.isInStock()" class="flex items-center text-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span>Out of Stock</span>
-                </div>
-            </div>
-
-            <!-- Product Options -->
-            <div id="product-options" x-show="hasOptions" class="mb-6">
-                <template x-for="(values, option) in productCore.getOptions()" :key="option">
-                    <div class="mb-4">
-                        <label x-text="formatOptionName(option)" class="block font-medium mb-2"></label>
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="value in values" :key="value">
-                                <button
-                                        @click="selectOption(option, value)"
-                                        :class="{'bg-blue-700 text-white': productCore.selectedOptions[option] === value,
-                                                'bg-white text-gray-800 hover:bg-gray-100': productCore.selectedOptions[option] !== value}"
-                                        class="px-4 py-2 border border-gray-300 rounded-md transition"
-                                        x-text="value"
-                                ></button>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Quantity and Add to Cart -->
-            <div id="product-actions" class="mb-8">
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="sm:w-1/3">
-                        <label for="quantity" class="block font-medium mb-2">Quantity</label>
-                        <div class="custom-number-input h-10 w-full">
-                            <div class="flex flex-row h-10 w-full rounded-lg relative bg-transparent border border-gray-300">
-                                <button @click="quantity > 1 ? quantity-- : null"
-                                        class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:bg-gray-200 h-full w-20 rounded-l outline-none">
-                                    <span class="m-auto text-2xl font-thin">−</span>
-                                </button>
-                                <input type="number"
-                                       id="quantity"
-                                       x-model.number="quantity"
-                                       min="1"
-                                       :max="productCore.getInventoryForSelection() || 99"
-                                       class="focus:outline-none text-center w-full bg-white font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center text-gray-800 outline-none"
-                                       name="quantity">
-                                <button @click="quantity < (productCore.getInventoryForSelection() || 99) ? quantity++ : null"
-                                        class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:bg-gray-200 h-full w-20 rounded-r outline-none">
-                                    <span class="m-auto text-2xl font-thin">+</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="sm:w-2/3">
-                        <label class="block font-medium mb-2 opacity-0">Action</label>
-                        <button
-                                @click="addToCart(quantity)"
-                                :disabled="!productCore.isInStock()"
-                                :class="{'opacity-50 cursor-not-allowed': !productCore.isInStock()}"
-                                class="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-6 rounded-lg transition flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span>Add to Cart</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Shipping Info -->
-            <div id="shipping-info" class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <h3 id="shipping-title" class="font-bold mb-2">Shipping Information</h3>
-                <p id="shipping-text" x-text="productCore.getShippingInfo()" class="text-gray-700"></p>
-            </div>
-
-            <!-- Share Product -->
-            <div id="product-share" class="flex items-center">
-                <span class="mr-2 font-medium">Share:</span>
-                <div class="flex space-x-2">
-                    <a href="#" class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                        </svg>
-                    </a>
-                    <a href="#" class="p-2 bg-blue-400 text-white rounded-full hover:bg-blue-500 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                        </svg>
-                    </a>
-                    <a href="#" class="p-2 bg-pink-600 text-white rounded-full hover:bg-pink-700 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.332.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                        </svg>
-                    </a>
-                    <a href="#" class="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                        </svg>
-                    </a>
-                </div>
-            </div>
+            </template>
+            <span class="mx-2">›</span>
+            <span x-text="product.name" class="text-gray-700"></span>
         </div>
     </div>
 
-    <!-- Product Features -->
-    <div id="product-features" class="mt-12">
-        <h2 id="features-title" class="text-2xl font-bold mb-6">Product Features</h2>
+    <!-- Product Details -->
+    <div
+            x-data="{
+                currentProductId: 0,
+                product: {},
+                init() {
+                    // Get product ID from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const productId = parseInt(urlParams.get('id') || '0');
 
-        <div id="features-tabs" x-data="{ activeTab: 'description' }" class="border-b border-gray-200 mb-6">
-            <ul class="flex flex-wrap -mb-px">
-                <li class="mr-2">
+                    // Find product by ID or use first product as fallback
+                    this.product = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
+                    this.currentProductId = this.product.id;
+                }
+            }">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="md:flex">
+                <!-- Product Image Gallery (Left Side) -->
+                <div class="md:w-1/2 p-6" x-data="productViewer(product)">
+                    <!-- Main Image -->
+                    <div class="main-image-container relative bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                        <img
+                                x-ref="mainImage"
+                                :src="getSelectedImage()"
+                                :alt="product.name"
+                                @mouseenter="mouseEnter($event)"
+                                @mouseleave="mouseLeave()"
+                                @mousemove="mouseMove($event)"
+                                @error="handleImageError($event)"
+                                :style="imgStyle"
+                                class="w-full h-96 object-contain transition-transform product-main-image">
+
+                        <!-- Zoom Instruction -->
+                        <div
+                                x-show="!zoomed"
+                                class="absolute top-4 right-4 bg-white/80 text-gray-700 text-xs px-2 py-1 rounded-full flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Hover to zoom
+                        </div>
+                    </div>
+
+                    <!-- Thumbnails -->
+                    <div x-show="hasThumbnails()" class="thumbnails-container relative" x-ref="thumbnailsContainer">
+                        <button
+                                @click="scrollThumbnails('left')"
+                                x-show="!isScrollLeftEnd"
+                                class="thumbnail-scroll-button absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        <div class="thumbnails-wrap overflow-x-auto flex space-x-2 py-2 px-6">
+                            <template x-for="image in product.images" :key="image">
+                                <div
+                                        @click="selectImage(image)"
+                                        :class="{'border-primary': selectedImage === image, 'border-transparent': selectedImage !== image}"
+                                        class="thumbnail flex-shrink-0 border-2 rounded-md overflow-hidden cursor-pointer w-20 h-20">
+                                    <img :src="image" :alt="product.name" class="w-full h-full object-cover">
+                                </div>
+                            </template>
+                        </div>
+
+                        <button
+                                @click="scrollThumbnails('right')"
+                                x-show="!isScrollRightEnd"
+                                class="thumbnail-scroll-button absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 rounded-full p-1 shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Details (Right Side) -->
+                <div class="md:w-1/2 p-6 bg-gray-50" x-data="productDetail({ product: product })">
+                    <!-- Basic Product Info -->
+                    <div class="mb-6">
+                        <!-- Brand -->
+                        <div x-show="product.brand" class="text-gray-600 text-sm mb-1" x-text="product.brand"></div>
+
+                        <!-- Product Title -->
+                        <h1 id="product-title" class="text-3xl font-bold mb-2" x-text="product.name"></h1>
+
+                        <!-- Rating -->
+                        <div class="flex items-center mb-3">
+                            <div class="flex mr-2">
+                                <template x-for="i in 5">
+                                    <svg
+                                            :class="{'text-yellow-500': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            class="w-5 h-5">
+                                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                    </svg>
+                                </template>
+                            </div>
+                            <span x-text="product.rating" class="font-medium"></span>
+                            <span class="mx-1">|</span>
+                            <span x-text="`${product.reviews_count} reviews`" class="text-gray-600"></span>
+                        </div>
+
+                        <!-- Product ID/SKU -->
+                        <div class="text-sm text-gray-500 mb-3">
+                            <span>SKU: </span>
+                            <span x-text="product.sku"></span>
+                        </div>
+                    </div>
+
+                    <!-- Price & Stock -->
+                    <div class="mb-6">
+                        <div x-data="utilities()">
+                            <!-- Price -->
+                            <div class="flex items-center mb-2">
+                                <span id="product-price" class="text-3xl font-bold text-primary" x-text="formatPrice(getVariantPrice())"></span>
+                                <span
+                                        x-show="product.free_shipping"
+                                        class="ml-3 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                        Free Shipping
+                                    </span>
+                            </div>
+
+                            <!-- Stock Status -->
+                            <div>
+                                <p
+                                        x-show="getVariantStock() > product.lowStockThreshold"
+                                        class="text-green-600 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                    In Stock
+                                </p>
+                                <p
+                                        x-show="getVariantStock() <= product.lowStockThreshold && getVariantStock() > 0"
+                                        class="text-orange-600 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    Only <span x-text="getVariantStock()"></span> left!
+                                </p>
+                                <p
+                                        x-show="getVariantStock() === 0"
+                                        class="text-red-600 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                    Out of Stock
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Description -->
+                    <div class="mb-6">
+                        <p x-text="product.description" class="text-gray-700"></p>
+                    </div>
+
+                    <!-- Option Selectors -->
+                    <div class="mb-6">
+                        <template x-for="(values, option) in product.options" :key="option">
+                            <div class="option-selector mb-4">
+                                <label x-text="formatOptionName(option)" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                                <div class="option-buttons flex flex-wrap gap-2">
+                                    <template x-for="value in values" :key="value">
+                                        <button
+                                                @click="selectedOptions[option] = value"
+                                                :class="getOptionButtonClass(option, value)"
+                                                :disabled="!isOptionValueAvailable(option, value)"
+                                                class="min-w-[4rem] px-4 py-2 text-sm font-medium rounded border transition focus:outline-none focus:ring-2 focus:ring-primary">
+                                            <span x-text="value"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Quantity & Add to Cart -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <div class="flex items-center mb-4">
+                            <!-- Quantity selector -->
+                            <div class="quantity-selector flex items-center border border-gray-300 rounded overflow-hidden">
+                                <button
+                                        @click="decreaseQuantity()"
+                                        class="px-3 py-2 bg-gray-100 hover:bg-gray-200 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+
+                                <input
+                                        type="number"
+                                        x-model.number="quantity"
+                                        min="1"
+                                        :max="getVariantStock()"
+                                        class="w-16 border-0 text-center focus:ring-0 focus:outline-none">
+
+                                <button
+                                        @click="increaseQuantity()"
+                                        class="px-3 py-2 bg-gray-100 hover:bg-gray-200 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Stock indicator -->
+                            <div class="ml-4 text-sm text-gray-500">
+                                <span x-show="getVariantStock() > 0" x-text="`${getVariantStock()} available`"></span>
+                            </div>
+                        </div>
+
+                        <!-- Add to Cart & Buy Now buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button
+                                    @click="addToCart()"
+                                    :disabled="!isVariantInStock()"
+                                    :class="{'opacity-50 cursor-not-allowed': !isVariantInStock()}"
+                                    class="flex-1 bg-primary text-white font-medium py-3 px-6 rounded hover:bg-indigo-700 transition">
+                                Add to Cart
+                            </button>
+
+                            <button
+                                    @click="buyNow()"
+                                    :disabled="!isVariantInStock()"
+                                    :class="{'opacity-50 cursor-not-allowed': !isVariantInStock()}"
+                                    class="flex-1 border-2 border-primary text-primary font-medium py-3 px-6 rounded hover:bg-primary hover:text-white transition">
+                                Buy Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Additional Product Details -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="mb-4">
+                            <button
+                                    @click="toggleFeatures()"
+                                    class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none"
+                                    x-data="{ open: true, toggleFeatures() { this.open = !this.open; } }">
+                                <span>Product Features</span>
+                                <svg
+                                        :class="{'rotate-180': !open}"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-5 w-5 transform transition-transform"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div
+                                    x-show="open"
+                                    x-data="{ open: true }"
+                                    class="mt-2 text-gray-700">
+                                <div x-data="utilities()">
+                                    <template x-if="typeof product.features === 'object' && product.features !== null">
+                                        <div class="grid grid-cols-1 gap-2">
+                                            <template x-for="(value, key) in product.features" :key="key">
+                                                <div class="flex items-start py-1 border-b border-gray-100 last:border-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary mr-3 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <span>
+                                                            <span x-text="formatFeatureKey(key)" class="font-medium"></span>:
+                                                            <span x-text="value" class="text-gray-600"></span>
+                                                        </span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button
+                                    @click="toggleShipping()"
+                                    class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none"
+                                    x-data="{ open: false, toggleShipping() { this.open = !this.open; } }">
+                                <span>Shipping Information</span>
+                                <svg
+                                        :class="{'rotate-180': !open}"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-5 w-5 transform transition-transform"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div
+                                    x-show="open"
+                                    x-data="{ open: false }"
+                                    class="mt-2 text-gray-700">
+                                <ul class="list-disc ml-5 space-y-1 text-sm">
+                                    <li>Free shipping on orders over $50</li>
+                                    <li>Standard delivery: 3-5 business days</li>
+                                    <li>Express delivery: 1-3 business days (additional fees apply)</li>
+                                    <li>International shipping available to select countries</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Tabs Section -->
+        <div class="mt-10" x-data="{ activeTab: 'description' }">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <div class="flex flex-wrap -mb-px">
                     <button
                             @click="activeTab = 'description'"
-                            :class="{'border-blue-700 text-blue-700': activeTab === 'description',
-                                     'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'description'}"
-                            class="inline-block py-4 px-4 font-medium border-b-2 transition"
-                    >
+                            :class="{'border-primary text-primary': activeTab === 'description', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'description'}"
+                            class="inline-block py-4 px-4 text-center border-b-2 font-medium text-sm md:text-base">
                         Description
                     </button>
-                </li>
-                <li class="mr-2">
+
                     <button
                             @click="activeTab = 'specifications'"
-                            :class="{'border-blue-700 text-blue-700': activeTab === 'specifications',
-                                     'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'specifications'}"
-                            class="inline-block py-4 px-4 font-medium border-b-2 transition"
-                    >
+                            :class="{'border-primary text-primary': activeTab === 'specifications', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'specifications'}"
+                            class="inline-block py-4 px-4 text-center border-b-2 font-medium text-sm md:text-base">
                         Specifications
                     </button>
-                </li>
-                <li>
+
                     <button
                             @click="activeTab = 'reviews'"
-                            :class="{'border-blue-700 text-blue-700': activeTab === 'reviews',
-                                     'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'reviews'}"
-                            class="inline-block py-4 px-4 font-medium border-b-2 transition"
-                    >
-                        Reviews
+                            :class="{'border-primary text-primary': activeTab === 'reviews', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'reviews'}"
+                            class="inline-block py-4 px-4 text-center border-b-2 font-medium text-sm md:text-base">
+                        Reviews <span class="text-primary" x-text="`(${product.reviews_count})`"></span>
                     </button>
-                </li>
-            </ul>
-        </div>
+                </div>
+            </div>
 
-        <div id="features-content">
-            <!-- Description Tab -->
-            <div id="tab-description" x-show="activeTab === 'description'" class="prose max-w-none">
-                <p x-text="product.description" class="mb-4"></p>
+            <!-- Tab Content -->
+            <div class="mt-6">
+                <!-- Description Tab -->
+                <div x-show="activeTab === 'description'" class="prose max-w-none">
+                    <div x-html="generateDetailedDescription()"></div>
+                </div>
 
-                <div x-show="product.features && (typeof product.features === 'object')" x-data="{ featureList: [] }" x-init="featureList = Array.isArray(product.features) ? product.features : Object.entries(product.features).map(([name, value]) => ({ name, value }))">
-                    <template x-if="featureList.length > 0">
+                <!-- Specifications Tab -->
+                <div x-show="activeTab === 'specifications'" class="prose max-w-none">
+                    <h3 class="text-xl font-bold mb-4">Product Specifications</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Basic Specifications -->
                         <div>
-                            <h3 class="text-xl font-bold mb-4">Key Benefits</h3>
-                            <ul class="list-disc pl-6 space-y-2">
-                                <template x-for="feature in featureList" :key="feature.name || feature">
-                                    <li x-text="feature.name ? `${feature.name}: ${feature.value}` : feature"></li>
-                                </template>
-                            </ul>
+                            <h4 class="text-lg font-semibold mb-3">Basic Information</h4>
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <div class="divide-y divide-gray-200">
+                                    <div class="grid grid-cols-2 p-4">
+                                        <span class="text-gray-600">Brand</span>
+                                        <span x-text="product.brand" class="font-medium"></span>
+                                    </div>
+                                    <div class="grid grid-cols-2 p-4">
+                                        <span class="text-gray-600">SKU</span>
+                                        <span x-text="product.sku" class="font-medium"></span>
+                                    </div>
+                                    <div class="grid grid-cols-2 p-4">
+                                        <span class="text-gray-600">Weight</span>
+                                        <span class="font-medium" x-text="product.weight ? `${product.weight.value} ${product.weight.unit}` : 'N/A'"></span>
+                                    </div>
+                                    <div class="grid grid-cols-2 p-4">
+                                        <span class="text-gray-600">Dimensions</span>
+                                        <span class="font-medium" x-text="product.dimensions ? `${product.dimensions.length} × ${product.dimensions.width} × ${product.dimensions.height} ${product.dimensions.unit}` : 'N/A'"></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </template>
-                </div>
-            </div>
 
-            <!-- Specifications Tab -->
-            <div id="tab-specifications" x-show="activeTab === 'specifications'" class="prose max-w-none">
-                <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Product Specifications</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Detailed information about this product.</p>
-                    </div>
-                    <div class="border-t border-gray-200">
-                        <dl>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Brand</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" x-text="product.brand || 'N/A'"></dd>
-                            </div>
-                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">SKU</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" x-text="product.sku || 'N/A'"></dd>
-                            </div>
-                            <template x-if="product.weight">
-                                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                    <dt class="text-sm font-medium text-gray-500">Weight</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" x-text="product.weight.value + ' ' + product.weight.unit"></dd>
+                        <!-- Features List -->
+                        <div>
+                            <h4 class="text-lg font-semibold mb-3">Features</h4>
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <div class="divide-y divide-gray-200" x-data="utilities()">
+                                    <template x-if="typeof product.features === 'object' && product.features !== null">
+                                        <template x-for="(value, key) in product.features" :key="key">
+                                            <div class="grid grid-cols-2 p-4">
+                                                <span class="text-gray-600" x-text="formatFeatureKey(key)"></span>
+                                                <span class="font-medium" x-text="value"></span>
+                                            </div>
+                                        </template>
+                                    </template>
                                 </div>
-                            </template>
-                            <template x-if="product.dimensions">
-                                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                    <dt class="text-sm font-medium text-gray-500">Dimensions</dt>
-                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2" x-text="product.dimensions.length + ' x ' + product.dimensions.width + ' x ' + product.dimensions.height + ' ' + product.dimensions.unit"></dd>
-                                </div>
-                            </template>
-                        </dl>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Reviews Tab -->
-            <div id="tab-reviews" x-show="activeTab === 'reviews'">
-                <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
-                    <div>
+                <!-- Reviews Tab -->
+                <div x-show="activeTab === 'reviews'" class="prose max-w-none">
+                    <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold">Customer Reviews</h3>
-                        <div class="flex items-center mt-2">
-                            <div class="flex text-yellow-400">
-                                <template x-for="i in 5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{'text-yellow-400': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                </template>
-                            </div>
-                            <p class="ml-2 text-sm text-gray-600" x-text="product.rating + ' out of 5 (' + product.reviews_count + ' reviews)'"></p>
-                        </div>
-                    </div>
-                    <button class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg mt-4 md:mt-0 transition">Write a Review</button>
-                </div>
-
-                <!-- Sample reviews - in a real implementation, these would be loaded dynamically -->
-                <div class="space-y-6">
-                    <div class="border-b border-gray-200 pb-6">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-bold">Great Product!</h4>
-                                <div class="flex text-yellow-400 mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <span class="text-sm text-gray-500">2 months ago</span>
-                        </div>
-                        <p class="mt-3 text-gray-700">This product is amazing! I've been using it for a month now and I can already see the results. Highly recommended!</p>
-                        <div class="mt-2">
-                            <span class="text-sm text-gray-500">By: John D.</span>
-                        </div>
+                        <button class="bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Write a Review</button>
                     </div>
 
-                    <div class="border-b border-gray-200 pb-6">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-bold">Good Value</h4>
-                                <div class="flex text-yellow-400 mt-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <div class="flex flex-col md:flex-row md:items-center">
+                            <div class="md:w-1/3 text-center mb-6 md:mb-0">
+                                <div class="text-5xl font-bold text-primary" x-text="product.rating"></div>
+                                <div class="flex justify-center mt-2">
+                                    <template x-for="i in 5">
+                                        <svg
+                                                :class="{'text-yellow-500': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                class="w-6 h-6">
+                                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                        </svg>
+                                    </template>
+                                </div>
+                                <div class="text-sm text-gray-500 mt-1" x-text="`Based on ${product.reviews_count} reviews`"></div>
+                            </div>
+
+                            <div class="md:w-2/3 md:pl-10">
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <span class="text-sm w-10">5 star</span>
+                                        <div class="flex-1 h-4 mx-2 bg-gray-200 rounded">
+                                            <div class="h-4 bg-yellow-400 rounded" style="width: 65%"></div>
+                                        </div>
+                                        <span class="text-sm w-8">65%</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm w-10">4 star</span>
+                                        <div class="flex-1 h-4 mx-2 bg-gray-200 rounded">
+                                            <div class="h-4 bg-yellow-400 rounded" style="width: 20%"></div>
+                                        </div>
+                                        <span class="text-sm w-8">20%</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm w-10">3 star</span>
+                                        <div class="flex-1 h-4 mx-2 bg-gray-200 rounded">
+                                            <div class="h-4 bg-yellow-400 rounded" style="width: 10%"></div>
+                                        </div>
+                                        <span class="text-sm w-8">10%</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm w-10">2 star</span>
+                                        <div class="flex-1 h-4 mx-2 bg-gray-200 rounded">
+                                            <div class="h-4 bg-yellow-400 rounded" style="width: 3%"></div>
+                                        </div>
+                                        <span class="text-sm w-8">3%</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm w-10">1 star</span>
+                                        <div class="flex-1 h-4 mx-2 bg-gray-200 rounded">
+                                            <div class="h-4 bg-yellow-400 rounded" style="width: 2%"></div>
+                                        </div>
+                                        <span class="text-sm w-8">2%</span>
+                                    </div>
                                 </div>
                             </div>
-                            <span class="text-sm text-gray-500">1 month ago</span>
                         </div>
-                        <p class="mt-3 text-gray-700">Good product for the price. The taste is great and I'm seeing results after 3 weeks of use. The packaging could be better though.</p>
-                        <div class="mt-2">
-                            <span class="text-sm text-gray-500">By: Sarah M.</span>
+                    </div>
+
+                    <!-- Sample Reviews -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex justify-between mb-3">
+                                <div>
+                                    <h4 class="font-semibold">John D.</h4>
+                                    <div class="flex mt-1">
+                                        <template x-for="i in 5">
+                                            <svg
+                                                    :class="{'text-yellow-500': i <= 5, 'text-gray-300': i > 5}"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="currentColor"
+                                                    class="w-4 h-4">
+                                                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">2 weeks ago</div>
+                            </div>
+                            <h5 class="font-medium mb-2">Best supplement I've tried!</h5>
+                            <p class="text-gray-600">I've been using this product for a month now and have seen noticeable improvements in my energy levels and recovery. The taste is great and it mixes well with both water and milk. Highly recommend!</p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex justify-between mb-3">
+                                <div>
+                                    <h4 class="font-semibold">Sarah M.</h4>
+                                    <div class="flex mt-1">
+                                        <template x-for="i in 5">
+                                            <svg
+                                                    :class="{'text-yellow-500': i <= 4, 'text-gray-300': i > 4}"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="currentColor"
+                                                    class="w-4 h-4">
+                                                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">1 month ago</div>
+                            </div>
+                            <h5 class="font-medium mb-2">Good product, but expensive</h5>
+                            <p class="text-gray-600">The quality is definitely there and I'm seeing results, but I wish it was a bit more affordable. The packaging is nice and the shipping was quick. I'll probably continue using it despite the price.</p>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex justify-between mb-3">
+                                <div>
+                                    <h4 class="font-semibold">Michael T.</h4>
+                                    <div class="flex mt-1">
+                                        <template x-for="i in 5">
+                                            <svg
+                                                    :class="{'text-yellow-500': i <= 5, 'text-gray-300': i > 5}"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="currentColor"
+                                                    class="w-4 h-4">
+                                                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">2 months ago</div>
+                            </div>
+                            <h5 class="font-medium mb-2">Excellent value and quality</h5>
+                            <p class="text-gray-600">This has become an essential part of my daily routine. The results were noticeable within just a couple of weeks. The flavor is great and it doesn't have that artificial aftertaste that many other supplements have. Will definitely purchase again!</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Related Products -->
-    <div id="related-products" x-data="{ relatedProducts: [] }" x-init="relatedProducts = product.relatedProducts ? Product.getByIds(product.relatedProducts).slice(0, 4) : Product.getSimilar(product.id, 4)" class="mt-16">
-        <h2 id="related-products-title" class="text-2xl font-bold mb-8">Related Products</h2>
+        <!-- Related Products Section -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold mb-6">You Might Also Like</h2>
 
-        <div id="related-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <template x-for="relatedProduct in relatedProducts" :key="relatedProduct.id">
-                <div class="product-card bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
-                    <a :href="'product.html?id=' + relatedProduct.id" class="block">
-                        <img :src="relatedProduct.images[0] || '/api/placeholder/300/300'" :alt="relatedProduct.name" class="w-full h-48 object-cover">
-                        <div class="p-4">
-                            <h3 x-text="relatedProduct.name" class="text-lg font-bold mb-2"></h3>
-                            <div class="flex justify-between items-center">
-                                <p class="text-blue-700 font-bold" x-text="'$' + relatedProduct.base_price.toFixed(2)"></p>
-                                <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <span x-text="relatedProduct.rating" class="ml-1"></span>
-                                </div>
+            <div
+                    x-data="{
+                        relatedProducts: [],
+                        init() {
+                            // Get related products IDs from the current product
+                            const relatedIds = [
+                                ...(product.relatedProducts || []),
+                                ...(product.crossSelling || []),
+                                ...(product.upselling || [])
+                            ];
+
+                            // Remove duplicates and get actual product objects
+                            const uniqueIds = [...new Set(relatedIds)];
+                            this.relatedProducts = PRODUCTS.filter(p => uniqueIds.includes(p.id))
+                                                           .slice(0, 4); // Limit to 4 products
+
+                            // If we don't have enough related products, add some from the same categories
+                            if (this.relatedProducts.length < 4 && product.categories) {
+                                const categoryProducts = PRODUCTS.filter(p =>
+                                    p.id !== product.id && // Not the current product
+                                    !uniqueIds.includes(p.id) && // Not already in related products
+                                    p.categories &&
+                                    p.categories.some(catId => product.categories.includes(catId))
+                                );
+
+                                // Add these products until we have 4
+                                for (let i = 0; i < categoryProducts.length && this.relatedProducts.length < 4; i++) {
+                                    this.relatedProducts.push(categoryProducts[i]);
+                                }
+                            }
+                        }
+                    }"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <template x-for="product in relatedProducts" :key="product.id">
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden flex flex-col">
+                        <!-- Product Image & Badge -->
+                        <div class="relative">
+                            <a :href="'product.html?id=' + product.id" class="block">
+                                <img
+                                        :src="product.images[0]"
+                                        :alt="product.name"
+                                        class="w-full h-64 object-cover">
+                            </a>
+                            <!-- Sale Badge -->
+                            <div
+                                    x-show="product.isOnSale"
+                                    class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 m-2 rounded">
+                                SALE
                             </div>
                         </div>
-                    </a>
-                    <div class="px-4 pb-4">
-                        <button @click.prevent="Alpine.store('cart').addItem(relatedProduct, 1, {}); Alpine.store('ui').showCartNotification()"
-                                class="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-lg transition">
-                            Add to Cart
-                        </button>
+
+                        <!-- Product Info -->
+                        <div class="p-4 flex-grow flex flex-col">
+                            <!-- Brand -->
+                            <div x-show="product.brand" class="text-gray-500 text-sm mb-1" x-text="product.brand"></div>
+
+                            <!-- Title -->
+                            <a :href="'product.html?id=' + product.id" class="block">
+                                <h3 class="font-bold text-lg mb-2 hover:text-primary transition" x-text="product.name"></h3>
+                            </a>
+
+                            <!-- Rating -->
+                            <div class="flex items-center mb-2">
+                                <div class="flex mr-1">
+                                    <template x-for="i in 5">
+                                        <svg
+                                                :class="{'text-yellow-500': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                class="w-4 h-4">
+                                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                                        </svg>
+                                    </template>
+                                </div>
+                                <span class="text-xs text-gray-600" x-text="`(${product.reviews_count})`"></span>
+                            </div>
+
+                            <!-- Price -->
+                            <div x-data="utilities()" class="mt-auto">
+                                <p class="text-primary font-bold" x-text="formatPrice(product.base_price)"></p>
+                            </div>
+                        </div>
+
+                        <!-- Add to Cart Button -->
+                        <div class="px-4 pb-4">
+                            <button
+                                    @click="$store.cart.addItem(product, 1, {}); $store.ui.showCartNotification()"
+                                    :disabled="product.totalVariantStock === 0"
+                                    :class="{'bg-primary hover:bg-indigo-700': product.totalVariantStock > 0, 'bg-gray-400 cursor-not-allowed': product.totalVariantStock === 0}"
+                                    class="w-full text-white py-2 rounded transition">
+                                <span x-show="product.totalVariantStock > 0">Add to Cart</span>
+                                <span x-show="product.totalVariantStock === 0">Out of Stock</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </template>
+                </template>
+            </div>
         </div>
     </div>
-</div>
+</main>
 
 <!-- Footer -->
-<footer id="main-footer" class="bg-blue-900 text-white py-12 mt-12">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div id="footer-about">
-                <h3 id="footer-about-title" class="text-xl font-bold mb-4">Optimen</h3>
-                <p id="footer-about-text" class="mb-4">Your trusted source for premium gym supplements in Lebanon, helping you achieve your fitness goals since 2015.</p>
+<footer class="bg-gray-800 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Footer Column 1 -->
+            <div>
+                <h3 id="footer-heading-1" class="text-xl font-bold mb-4">About Us</h3>
+                <p id="footer-about-text" class="text-gray-300">
+                    Optimum Nutrition provides premium supplements for fitness enthusiasts and health-conscious individuals. Our commitment to quality and science-backed formulations sets us apart in the industry.
+                </p>
+            </div>
+
+            <!-- Footer Column 2 -->
+            <div>
+                <h3 id="footer-heading-2" class="text-xl font-bold mb-4">Quick Links</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li><a href="index.html" id="footer-link-home" class="hover:text-primary transition">Home</a></li>
+                    <li><a href="products.html" id="footer-link-products" class="hover:text-primary transition">Products</a></li>
+                    <li><a href="cart.html" id="footer-link-cart" class="hover:text-primary transition">Cart</a></li>
+                    <li><a href="index.html#about" id="footer-link-about" class="hover:text-primary transition">About Us</a></li>
+                    <li><a href="#" id="footer-link-privacy" class="hover:text-primary transition">Privacy Policy</a></li>
+                    <li><a href="#" id="footer-link-terms" class="hover:text-primary transition">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <!-- Footer Column 3 -->
+            <div>
+                <h3 id="footer-heading-3" class="text-xl font-bold mb-4">Contact Us</h3>
+                <p id="footer-contact-email" class="text-gray-300 mb-2">Email: info@optimumnutrition.com</p>
+                <p id="footer-contact-phone" class="text-gray-300 mb-2">Phone: (555) 123-4567</p>
+                <p id="footer-contact-address" class="text-gray-300 mb-4">Address: 123 Nutrition St, Fitness City, FC 12345</p>
+
                 <div id="footer-social" class="flex space-x-4">
-                    <a href="#" id="social-facebook" class="hover:text-yellow-400 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                     </a>
-                    <a href="#" id="social-instagram" class="hover:text-yellow-400 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.332.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.03 10.03 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                         </svg>
                     </a>
-                    <a href="#" id="social-twitter" class="hover:text-yellow-400 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-primary transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
                         </svg>
                     </a>
                 </div>
             </div>
-
-            <div id="footer-links">
-                <h3 id="footer-links-title" class="text-xl font-bold mb-4">Quick Links</h3>
-                <ul class="space-y-2">
-                    <li><a href="index.html" id="footer-link-home" class="hover:text-yellow-400 transition">Home</a></li>
-                    <li><a href="products.html" id="footer-link-products" class="hover:text-yellow-400 transition">Products</a></li>
-                    <li><a href="index.html#about" id="footer-link-about" class="hover:text-yellow-400 transition">About Us</a></li>
-                    <li><a href="index.html#testimonials" id="footer-link-testimonials" class="hover:text-yellow-400 transition">Testimonials</a></li>
-                </ul>
-            </div>
-
-            <div id="footer-categories">
-                <h3 id="footer-categories-title" class="text-xl font-bold mb-4">Categories</h3>
-                <ul id="footer-categories-list"
-                    x-data="{ topCategories: Category.getFeatured().slice(0, 5) }"
-                    class="space-y-2">
-                    <template x-for="category in topCategories" :key="category.id">
-                        <li>
-                            <a :href="'products.html?category=' + category.id"
-                               x-text="category.name"
-                               class="hover:text-yellow-400 transition"></a>
-                        </li>
-                    </template>
-                </ul>
-            </div>
-
-            <div id="footer-contact">
-                <h3 id="footer-contact-title" class="text-xl font-bold mb-4">Contact Us</h3>
-                <ul class="space-y-2">
-                    <li id="contact-address" class="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>123 Fitness Street, Beirut, Lebanon</span>
-                    </li>
-                    <li id="contact-phone" class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <span>+961 1 234 567</span>
-                    </li>
-                    <li id="contact-email" class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <span>info@optimen.com</span>
-                    </li>
-                    <li id="contact-hours" class="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Mon-Sat: 9AM - 8PM<br>Sunday: 10AM - 6PM</span>
-                    </li>
-                </ul>
-            </div>
         </div>
 
-        <div id="footer-bottom" class="mt-12 pt-8 border-t border-blue-800 text-center">
-            <p id="footer-copyright">&copy; 2025 Optimen. All rights reserved. Website designed with ♥ by DV Team</p>
+        <!-- Copyright -->
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-300">
+            <p id="footer-copyright">© 2025 Optimum Nutrition. All rights reserved. Website designed with ♥ by DV Team</p>
         </div>
     </div>
 </footer>
 
-<!-- Floating WhatsApp Icon -->
-<a href="#" id="whatsapp-icon" @click.prevent="Alpine.store('ui').openWhatsApp()" class="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition z-50">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-</a>
-
-<!-- Go Up Button -->
-<button id="go-up-button" @click="Alpine.store('ui').scrollToTop()" x-data x-show="window.scrollY > 300" class="fixed bottom-6 left-6 bg-blue-700 hover:bg-blue-800 text-white p-3 rounded-full shadow-lg transition z-50" style="display: none;">
+<!-- Back to top button -->
+<button
+        @click="$store.ui.scrollToTop()"
+        class="fixed bottom-4 left-4 bg-primary text-white p-2 rounded-full shadow-lg">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
     </svg>
 </button>
 
-<!-- Floating Cart -->
-<button id="floating-cart"
+<!-- WhatsApp button -->
+<button
+        @click="$store.ui.openWhatsApp('Hello, I have a question about your products.')"
+        class="fixed bottom-4 right-4 bg-green-500 text-white p-2 rounded-full shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+</button>
+
+<!-- Cart notification -->
+<div
         x-data
-        x-show="Alpine.store('cart').getTotalItems() > 0"
-        @click="window.location.href = 'cart.html'"
-        class="fixed right-6 top-1/2 transform -translate-y-1/2 bg-blue-700 hover:bg-blue-800 text-white p-3 rounded-full shadow-lg transition z-50"
-        style="display: none;">
-    <div class="relative">
+        x-show="$store.ui.showCartNotification"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform translate-y-2"
+        class="fixed bottom-20 right-4 bg-green-500 text-white p-4 rounded shadow-lg">
+    Item added to cart!
+</div>
+
+<!-- Cart sidebar toggle -->
+<div
+        x-data="{ showMiniCart: false }"
+        x-show="$store.cart.getTotalItems() > 0"
+        class="fixed right-4 top-1/2 transform -translate-y-1/2">
+    <button
+            @click="showMiniCart = !showMiniCart"
+            class="bg-primary text-white p-2 rounded-l-full shadow-lg">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
-        <span id="floating-cart-badge"
-              x-text="Alpine.store('cart').getTotalItems()"
-              class="absolute -top-2 -right-2 bg-yellow-400 text-blue-900 rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
+        <span
+                x-text="$store.cart.getTotalItems()"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             </span>
-    </div>
-</button>
+    </button>
 
-<!-- Cart Notification -->
-<div id="cart-notification"
-     x-data
-     x-show="Alpine.store('ui').cartNotificationVisible"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0 transform translate-y-4"
-     x-transition:enter-end="opacity-100 transform translate-y-0"
-     x-transition:leave="transition ease-in duration-300"
-     x-transition:leave-start="opacity-100 transform translate-y-0"
-     x-transition:leave-end="opacity-0 transform translate-y-4"
-     class="fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center"
-     style="display: none;">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    </svg>
-    <span>Product added to cart!</span>
+    <!-- Mini Cart -->
+    <div
+            x-show="showMiniCart"
+            @click.away="showMiniCart = false"
+            class="absolute right-0 w-64 bg-white rounded shadow-xl p-4">
+        <h4 class="font-bold text-lg mb-2">Your Cart</h4>
+
+        <template x-for="(item, index) in $store.cart.items" :key="index">
+            <div class="flex items-center gap-2 py-2 border-b">
+                <img :src="item.image" :alt="item.name" class="w-12 h-12 object-cover">
+                <div class="flex-1">
+                    <p class="text-sm font-medium" x-text="item.name"></p>
+                    <p class="text-xs text-gray-500">
+                        Qty: <span x-text="item.quantity"></span>
+                    </p>
+                </div>
+                <p class="text-sm font-medium" x-text="'$' + (item.price * item.quantity).toFixed(2)"></p>
+            </div>
+        </template>
+
+        <div class="mt-4 flex justify-between items-center">
+            <p class="font-medium">Total:</p>
+            <p class="font-bold" x-text="$store.cart.getFormattedTotal()"></p>
+        </div>
+
+        <a href="cart.html" class="mt-4 block w-full bg-primary text-white text-center py-2 rounded">
+            View Cart
+        </a>
+    </div>
 </div>
 
+<!-- Helper function for generating detailed description -->
 <script>
-    // Product View Alpine Component
-    function productView(productData) {
-        return {
-            product: productData,
-            productCore: null,
-            imageZoom: null,
-            thumbnailNav: null,
-            quantity: 1,
-            hasOptions: false,
+    function generateDetailedDescription() {
+        return `
+                <h3 class="text-xl font-bold mb-4">Product Description</h3>
+                <p class="mb-4">This premium supplement is designed to support your fitness goals and overall health. Formulated with high-quality ingredients and backed by scientific research, it delivers exceptional results.</p>
 
-            init() {
-                // Initialize ProductViewCore
-                this.productCore = new ProductViewCore(this.product);
+                <h4 class="text-lg font-semibold mb-2">Key Benefits:</h4>
+                <ul class="list-disc ml-5 mb-4">
+                    <li class="mb-1">Supports muscle recovery and growth</li>
+                    <li class="mb-1">Enhances energy levels and performance</li>
+                    <li class="mb-1">Helps maintain optimal nutritional balance</li>
+                    <li class="mb-1">Convenient and easy to incorporate into your daily routine</li>
+                </ul>
 
-                // Check if product has options
-                this.hasOptions = this.productCore.getOptions() && Object.keys(this.productCore.getOptions()).length > 0;
+                <h4 class="text-lg font-semibold mb-2">How to Use:</h4>
+                <p class="mb-4">Mix one scoop with 8-10 oz of water or your preferred beverage. Take 1-2 servings daily, preferably one immediately after your workout for optimal results.</p>
 
-                // Initialize Image Zoom Manager
-                this.imageZoom = new ImageZoomManager(this.$refs.imageContainer, this.$refs.mainImage);
-
-                // Initialize Thumbnail Navigator
-                this.thumbnailNav = new ThumbnailNavigator(this.$refs.thumbnailsContainer, this.productCore);
-            },
-
-            // Format option name (e.g., "color" -> "Color")
-            formatOptionName(option) {
-                return option.charAt(0).toUpperCase() + option.slice(1);
-            },
-
-            // Format price for display
-            formatPrice(price) {
-                return '$' + price.toFixed(2);
-            },
-
-            // Select an option
-            selectOption(option, value) {
-                this.productCore.selectOption(option, value);
-
-                // Update image if needed
-                const newImage = this.productCore.getSelectedImage();
-                if (newImage) {
-                    this.thumbnailNav.selectImageByUrl(newImage);
-                }
-            },
-
-            // Select an image
-            selectImage(src) {
-                this.thumbnailNav.selectImageByUrl(src);
-            },
-
-            // Check if an image is selected
-            isSelectedImage(src) {
-                return this.productCore.getSelectedImage() === src;
-            },
-
-            // Add to cart
-            addToCart(quantity) {
-                if (!this.productCore.isInStock()) return;
-
-                // Add to cart using the Cart module
-                Alpine.store('cart').addItem(
-                    this.product,
-                    quantity,
-                    this.productCore.selectedOptions
-                );
-
-                // Show notification
-                Alpine.store('ui').showCartNotification();
-            },
-
-            // Image zoom functionality
-            mouseMove(e) {
-                if (this.imageZoom) this.imageZoom.handleMouseMove(e);
-            },
-
-            mouseEnter(e) {
-                if (this.imageZoom) this.imageZoom.handleMouseEnter(e);
-            },
-
-            mouseLeave(e) {
-                if (this.imageZoom) this.imageZoom.handleMouseLeave(e);
-            },
-
-            // Touch support for mobile
-            touchStart(e) {
-                if (this.imageZoom) this.imageZoom.handleTouchStart(e);
-            },
-
-            touchMove(e) {
-                if (this.imageZoom) this.imageZoom.handleTouchMove(e);
-            },
-
-            touchEnd(e) {
-                if (this.imageZoom) this.imageZoom.handleTouchEnd(e);
-            }
-        };
+                <h4 class="text-lg font-semibold mb-2">Quality Assurance:</h4>
+                <p>All our products undergo rigorous testing to ensure purity, potency, and safety. We're committed to providing you with the highest quality supplements to support your health and fitness journey.</p>
+            `;
     }
-
-    // Initialize Alpine.js stores
-    document.addEventListener('alpine:init', () => {
-        // UI Store
-        Alpine.store('ui', {
-            mobileMenuOpen: false,
-            cartNotificationVisible: false,
-
-            toggleMobileMenu() {
-                this.mobileMenuOpen = !this.mobileMenuOpen;
-            },
-
-            scrollToTop() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            },
-
-            showCartNotification() {
-                this.cartNotificationVisible = true;
-                setTimeout(() => {
-                    this.cartNotificationVisible = false;
-                }, 3000);
-            },
-
-            openWhatsApp() {
-                // Open WhatsApp with a predefined message
-                const message = "Hello Optimen, I'm interested in your products.";
-                window.open(`https://wa.me/96112345678?text=${encodeURIComponent(message)}`, '_blank');
-            }
-        });
-
-        // Check scroll position for "Go Up" button
-        window.addEventListener('scroll', () => {
-            const goUpButton = document.getElementById('go-up-button');
-            if (goUpButton) {
-                if (window.scrollY > 300) {
-                    goUpButton.style.display = 'block';
-                } else {
-                    goUpButton.style.display = 'none';
-                }
-            }
-        });
-    });
-
-    // Get product ID from URL and load product data
-    document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-
-        if (productId) {
-            // Get product by ID
-            const product = Product.getById(parseInt(productId));
-
-            // Update Alpine data
-            if (product) {
-                Alpine.store('product', product);
-                document.querySelector('body').__x.$data.product = product;
-            }
-
-            // Hide loading spinner
-            document.querySelector('body').__x.$data.loading = false;
-
-            // Update page title
-            if (product) {
-                document.title = product.name + ' - Optimen';
-            }
-        } else {
-            // No product ID provided
-            document.querySelector('body').__x.$data.loading = false;
-        }
-    });
 </script>
+
+<!-- JavaScript Files -->
+<script src="js/products.js"></script>
+<script src="js/categories.js"></script>
+<script src="js/app.js"></script>
+<script src="js/product-page.js"></script>
 </body>
 </html>
