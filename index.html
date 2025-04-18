@@ -3,321 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Cotton Graphic T-Shirt (JS Module + Alpine)</title>
+    <title>Pure Whey Isolate | FitFuel</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine Core -->
-    <!-- Make sure Alpine is loaded before the module script that uses it -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <!-- Import and Register Alpine Component MODULE -->
-    <!-- THIS IS THE CRITICAL CHANGE: type="module" -->
-    <script type="module">
-        // Import the factory function from the module
-        import createClothingProductComponent from './product-component.js';
-
-        // Wait for Alpine to initialize, then register the component data
-        document.addEventListener('alpine:init', () => {
-            // Register the component with the name 'clothingProduct'
-            Alpine.data('clothingProduct', createClothingProductComponent);
-        })
-    </script>
-    <!-- Styles -->
-    <style>
-        [x-cloak] { display: none !important; }
-        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
-        .custom-scrollbar::-webkit-scrollbar { height: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
-        .sold-out-badge { background-color: rgba(0, 0, 0, 0.6); }
-        .option-indicator { position: absolute; bottom: 0; left: 0; right: 0; background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 0.75rem; padding: 2px 4px; text-align: center; }
-        img { user-select: none; }
-        .zoom-container img { touch-action: manipulation; /* Better default for touch */ }
-        .zoom-container img.zoomed-touch { touch-action: none; /* Disable scroll/zoom when panning */ }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 p-4 md:p-8">
+<!-- Product Viewer Component -->
+<div x-data="productViewer(product)" class="bg-white rounded-lg shadow-lg max-w-6xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800" x-text="product.name"></h2>
+        <div class="flex items-center">
+            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded" x-show="product.isFeatured">Featured</span>
+        </div>
+    </div>
 
-<!-- Initialize Alpine using the registered component name -->
-<!-- ANOTHER CRITICAL CHANGE: Use the registered name, not function call -->
-<div x-data="clothingProduct" x-cloak x-init="init()" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Product Images Section -->
-        <div class="space-y-4">
-            <!-- Main Image with Zoom -->
-            <div class="relative overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 zoom-container">
-                <div class="h-[450px] w-full flex items-center justify-center relative">
-                    <img x-ref="mainImage"
-                         :src="selectedImage"
-                         alt="Product Image"
-                         class="h-full w-auto object-contain transition-all duration-300 select-none cursor-zoom-in"
-                         :style="imgStyle"
-                         :class="{ 'cursor-grab': zoomed && isTouchDevice, 'zoomed-touch': zoomed && isTouchDevice && dragging }"
-                         @mousemove="mouseMove($event)"
-                         @mouseenter="mouseEnter($event)"
-                         @mouseleave="mouseLeave"
-                         @touchstart="touchStart($event)"
-                         @touchmove="touchMove($event)"
-                         @touchend="touchEnd"
-                         draggable="false" >
-
-                    <!-- Mobile zoom hint -->
-                    <div x-show="!zoomed && isTouchDevice" class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded" x-cloak >Double-tap to zoom</div>
-                    <div x-show="zoomed && isTouchDevice" class="absolute bottom-2 right-2 bg-indigo-700/80 text-white text-xs px-2 py-1 rounded" x-cloak >Drag to pan, double-tap to reset</div>
-                </div>
+        <!-- Product Images -->
+        <div>
+            <!-- Main Image -->
+            <div class="w-full h-80 rounded-lg overflow-hidden mb-4 bg-gray-100 flex items-center justify-center">
+                <img :src="getSelectedImage()" @error="handleImageError" class="w-full h-full object-contain" :alt="product.name">
             </div>
 
-            <!-- Thumbnails Navigation -->
-            <div class="relative">
-                <button @click="scrollThumbnails('left')"
+            <!-- Thumbnails -->
+            <div class="relative" x-show="hasThumbnails()">
+                <button
+                        @click="scrollThumbnails('left')"
+                        class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-md z-10 p-2"
+                        :class="{'opacity-50 cursor-not-allowed': isScrollLeftEnd, 'opacity-100': !isScrollLeftEnd}"
                         :disabled="isScrollLeftEnd"
-                        class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-10 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                        aria-label="Scroll thumbnails left">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </button>
 
-                <div class="overflow-x-auto py-2 px-6 flex space-x-3 custom-scrollbar"
-                     x-ref="thumbnailsContainer"
-                     @scroll.debounce.150ms="checkScrollPosition"> <!-- Debounce scroll handler -->
-
+                <div class="overflow-x-auto py-2 px-8 flex space-x-3" x-ref="thumbnailsContainer" @scroll="checkScrollPosition">
                     <!-- Main product images -->
-                    <template x-for="(image, index) in product.images" :key="'main-'+index">
-                        <div @click="selectImage(image)"
-                             :class="{ 'ring-2 ring-indigo-500': selectedImage === image, 'hover:ring-2 hover:ring-gray-300': selectedImage !== image }"
-                             class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative w-20 h-20"
-                             data-option-type="main" :data-option-value="index">
-                            <img :src="image" :alt="`Product thumbnail ${index + 1}`" class="h-full w-full object-cover">
-                            <span class="option-indicator">Main</span>
+                    <template x-for="(img, index) in product.images" :key="'main-'+index">
+                        <div
+                                @click="selectImage(img)"
+                                :class="{ 'ring-2 ring-indigo-500': selectedImage === img, 'hover:ring-2 hover:ring-gray-300': selectedImage !== img }"
+                                class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative"
+                        >
+                            <img :src="img" :alt="`Product thumbnail ${index + 1}`" class="h-20 w-20 object-cover" @error="handleImageError">
+                            <span class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center">Main</span>
                         </div>
                     </template>
 
-                    <!-- Color-specific images -->
-                    <template x-for="(images, color) in product.option_images.color" :key="'color-'+color">
-                        <template x-for="(image, imageIndex) in images" :key="'color-'+color+'-'+imageIndex">
-                            <div @click="selectImage(image); selectColor(color)"
-                                 :class="{
-                                        'ring-2 ring-indigo-500': selectedImage === image,
-                                        'hover:ring-2 hover:ring-gray-300': selectedImage !== image,
-                                        'opacity-75': selectedColor !== color && !product.variant_images[`${color}|${selectedDesign}`] && !product.variant_images[`${selectedSize}|${color}|${selectedDesign}`],
-                                        'opacity-100 scale-105': selectedColor === color && selectedImage === image
-                                     }"
-                                 class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative w-20 h-20"
-                                 data-option-type="color" :data-option-value="color">
-                                <img :src="image" :alt="`${color} thumbnail`" class="h-full w-full object-cover">
-                                <span class="option-indicator capitalize" x-text="color"></span>
-                            </div>
-                        </template>
-                    </template>
-
-                    <!-- Design-specific images -->
-                    <template x-for="(images, design) in product.option_images.design" :key="'design-'+design">
-                        <template x-for="(image, imageIndex) in images" :key="'design-'+design+'-'+imageIndex">
-                            <div @click="selectImage(image); selectDesign(design)"
-                                 :class="{
-                                        'ring-2 ring-indigo-500': selectedImage === image,
-                                        'hover:ring-2 hover:ring-gray-300': selectedImage !== image,
-                                        'opacity-75': selectedDesign !== design && !product.variant_images[`${selectedColor}|${design}`] && !product.variant_images[`${selectedSize}|${selectedColor}|${design}`],
-                                        'opacity-100 scale-105': selectedDesign === design && selectedImage === image
-                                      }"
-                                 class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative w-20 h-20"
-                                 data-option-type="design" :data-option-value="design">
-                                <img :src="image" :alt="`${design} thumbnail`" class="h-full w-full object-cover">
-                                <span class="option-indicator capitalize" x-text="design"></span>
-                            </div>
-                        </template>
-                    </template>
-
-                    <!-- Variant-specific images -->
-                    <template x-for="(variantImageSource, key) in product.variant_images" :key="'variant-'+key">
-                        <template x-if="Array.isArray(variantImageSource)">
-                            <template x-for="(image, imageIndex) in variantImageSource" :key="'variant-'+key+'-'+imageIndex">
-                                <div @click="selectImage(image); selectVariantFromKey(key)"
-                                     :class="{ 'ring-2 ring-indigo-500': selectedImage === image, 'hover:ring-2 hover:ring-gray-300': selectedImage !== image }"
-                                     class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative w-20 h-20"
-                                     data-option-type="variant" :data-option-value="key">
-                                    <img :src="image" :alt="`Variant thumbnail for ${key.replace('|', ' + ')}`" class="h-full w-full object-cover">
-                                    <span class="option-indicator capitalize" x-text="key.replace(/\|/g, ' + ')"></span>
+                    <!-- Option-specific images -->
+                    <template x-for="(optionValues, optionType) in product.option_images" :key="optionType">
+                        <template x-for="(images, optionValue) in optionValues" :key="optionValue">
+                            <template x-for="(img, idx) in images" :key="`${optionType}-${optionValue}-${idx}`">
+                                <div
+                                        @click="selectImage(img); selectOptionFromImage(optionType, optionValue)"
+                                        :class="{ 'ring-2 ring-indigo-500': selectedImage === img, 'hover:ring-2 hover:ring-gray-300': selectedImage !== img }"
+                                        class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative"
+                                >
+                                    <img :src="img" :alt="`${optionValue} ${optionType}`" class="h-20 w-20 object-cover" @error="handleImageError">
+                                    <span class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center" x-text="optionValue"></span>
                                 </div>
                             </template>
-                        </template>
-                        <template x-if="!Array.isArray(variantImageSource)">
-                            <div @click="selectImage(variantImageSource); selectVariantFromKey(key)"
-                                 :class="{ 'ring-2 ring-indigo-500': selectedImage === variantImageSource, 'hover:ring-2 hover:ring-gray-300': selectedImage !== variantImageSource }"
-                                 class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative w-20 h-20"
-                                 data-option-type="variant" :data-option-value="key">
-                                <img :src="variantImageSource" :alt="`Variant thumbnail for ${key.replace('|', ' + ')}`" class="h-full w-full object-cover">
-                                <span class="option-indicator capitalize" x-text="key.replace(/\|/g, ' + ')"></span>
-                            </div>
                         </template>
                     </template>
                 </div>
 
-                <button @click="scrollThumbnails('right')"
+                <button
+                        @click="scrollThumbnails('right')"
+                        class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-md z-10 p-2"
+                        :class="{'opacity-50 cursor-not-allowed': isScrollRightEnd, 'opacity-100': !isScrollRightEnd}"
                         :disabled="isScrollRightEnd"
-                        class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-10 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                        aria-label="Scroll thumbnails right">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </button>
             </div>
         </div>
 
-        <!-- Product Details Section -->
-        <div class="space-y-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900" x-text="product.name"></h1>
-                <!-- Rating -->
-                <div class="mt-2 flex items-center">
-                    <div class="flex items-center">
-                        <template x-for="i in 5" :key="i">
-                            <svg :class="{'text-yellow-400': i <= Math.round(product.rating), 'text-gray-300': i > Math.round(product.rating)}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 flex-shrink-0">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                        </template>
-                    </div>
-                    <span class="ml-2 text-sm text-gray-600" x-text="`${product.rating.toFixed(1)} (${product.reviews_count} reviews)`"></span>
-                </div>
-                <!-- Price & Stock Indicators -->
-                <div class="mt-3">
-                    <p class="text-2xl font-semibold text-indigo-700">
-                        $<span x-text="formatPrice(calculatePrice())"></span>
-                        <span x-show="product.isOnSale && product.base_price > calculatePrice()" class="ml-2 text-base font-normal text-gray-500 line-through">
-                                $<span x-text="formatPrice(product.base_price)"></span>
-                            </span>
-                    </p>
-                    <div class="mt-2 flex items-center space-x-3">
-                             <span x-show="!isVariantAvailable()" class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                Sold Out
-                             </span>
-                        <span x-show="isVariantAvailable() && currentStock() <= product.lowStockThreshold && currentStock() > 0" class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                                Only <strong class="mx-1" x-text="currentStock()"></strong> left!
-                             </span>
-                        <span x-show="isVariantAvailable() && currentStock() > product.lowStockThreshold" class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                In Stock
-                             </span>
-                    </div>
-                </div>
+        <!-- Product Details -->
+        <div>
+            <div class="flex items-center mb-4">
+                <span class="text-sm text-gray-600 mr-2">By</span>
+                <span class="font-medium text-gray-800" x-text="product.brand"></span>
             </div>
 
-            <div class="border-t border-b border-gray-200 py-4">
-                <p class="text-gray-700 leading-relaxed" x-text="product.description"></p>
+            <p class="text-gray-600 mb-4" x-text="product.description"></p>
+
+            <!-- Rating display -->
+            <div class="flex items-center mb-4" x-show="product.rating">
+                <div class="flex text-yellow-400">
+                    <template x-for="i in 5" :key="i">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="i <= Math.round(product.rating) ? 'text-yellow-400' : 'text-gray-300'" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </template>
+                </div>
+                <span class="ml-2 text-gray-600" x-text="`${product.rating} (${product.reviews_count} reviews)`"></span>
             </div>
 
-            <!-- Size Options -->
-            <fieldset class="mt-4">
-                <legend class="sr-only">Choose a size</legend>
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-medium text-gray-900">Size:</h2>
-                    <span class="text-sm font-medium text-gray-600 uppercase" x-text="selectedSize"></span>
+            <div class="mb-6">
+                <div class="flex items-end gap-2">
+                    <p class="text-3xl font-bold text-gray-900" x-text="formatPrice(calculateCurrentPrice())"></p>
+                    <span class="text-sm text-gray-500" x-show="product.isOnSale">Sale</span>
                 </div>
-                <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                    <template x-for="size in product.options.size" :key="size">
-                        <label :for="'size-choice-'+size"
-                               :class="{
-                                    'ring-2 ring-indigo-500 border-transparent': selectedSize === size && isSizeAvailable(size),
-                                    'border-gray-300 text-gray-900 hover:bg-gray-50': selectedSize !== size && isSizeAvailable(size),
-                                    'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed': !isSizeAvailable(size),
-                                    'ring-2 ring-red-400 border-transparent': selectedSize === size && !isVariantAvailable() && isSizeAvailable(size) // Red ring if selected but combo unavailable
-                                   }"
-                               class="border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase focus:outline-none sm:flex-1 cursor-pointer relative transition-colors duration-150 ease-in-out">
-                            <input type="radio" :id="'size-choice-'+size" name="size-choice" :value="size" x-model="selectedSize" @change="selectSize(size)" :disabled="!isSizeAvailable(size)" class="sr-only" :aria-label="size.toUpperCase()">
-                            <span x-text="size"></span>
-                            <!-- Cross-out overlay for unavailable sizes -->
-                            <span x-show="!isSizeAvailable(size)" aria-hidden="true" class="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200">
-                                    <svg class="absolute inset-0 h-full w-full stroke-2 text-gray-300" viewBox="0 0 100 100" preserveAspectRatio="none" stroke="currentColor"><line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke"></line></svg>
-                                </span>
-                        </label>
-                    </template>
-                </div>
-            </fieldset>
+                <p class="text-sm text-gray-500" x-text="`SKU: ${product.sku}`"></p>
+            </div>
 
-            <!-- Color Options -->
-            <fieldset class="mt-4">
-                <legend class="sr-only">Choose a color</legend>
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-medium text-gray-900">Color:</h2>
-                    <span class="text-sm font-medium text-gray-600 capitalize" x-text="selectedColor"></span>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <template x-for="color in product.options.color" :key="color">
-                        <label :for="'color-choice-'+color"
-                               :class="{
-                                    'ring-2 ring-offset-2 ring-indigo-500': selectedColor === color && isColorAvailable(color),
-                                    'ring-gray-300': selectedColor !== color && isColorAvailable(color),
-                                    'opacity-50 cursor-not-allowed ring-gray-200': !isColorAvailable(color),
-                                    'ring-2 ring-offset-2 ring-red-400': selectedColor === color && !isVariantAvailable() && isColorAvailable(color) // Red ring if selected but combo unavailable
-                                   }"
-                               class="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-1 ring-offset-1 transition-colors duration-150 ease-in-out">
-                            <input type="radio" :id="'color-choice-'+color" name="color-choice" :value="color" x-model="selectedColor" @change="selectColor(color)" :disabled="!isColorAvailable(color)" class="sr-only" :aria-label="color">
-                            <span aria-hidden="true" class="h-8 w-8 rounded-full border border-black border-opacity-10" :style="{ backgroundColor: getColorHex(color) }"></span>
-                            <!-- Cross-out SVG for unavailable colors -->
-                            <span x-show="!isColorAvailable(color)" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <svg class="h-6 w-6 text-gray-500 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                </span>
-                        </label>
-                    </template>
-                </div>
-            </fieldset>
+            <!-- Product options -->
+            <div class="space-y-4 mb-6" x-show="product.options && Object.keys(product.options).length > 0">
+                <template x-for="(values, option) in product.options" :key="option">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 capitalize mb-2" x-text="formatOptionName(option)"></label>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(value, idx) in values" :key="idx">
+                                <button
+                                        class="px-4 py-2 border rounded-md hover:border-indigo-500 transition-colors duration-200"
+                                        :class="selectedOptions[option] === value ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-700'"
+                                        @click="selectOption(option, value)"
+                                        x-text="value"
+                                ></button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
 
-            <!-- Design Options -->
-            <fieldset class="mt-4">
-                <legend class="sr-only">Choose a design</legend>
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-medium text-gray-900">Design:</h2>
-                    <span class="text-sm font-medium text-gray-600 capitalize" x-text="selectedDesign"></span>
-                </div>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <template x-for="design in product.options.design" :key="design">
-                        <label :for="'design-choice-'+design"
-                               :class="{
-                                    'ring-2 ring-indigo-500 border-transparent': selectedDesign === design && isDesignAvailable(design),
-                                    'border-gray-300 text-gray-900 hover:bg-gray-50': selectedDesign !== design && isDesignAvailable(design),
-                                    'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed': !isDesignAvailable(design),
-                                    'ring-2 ring-red-400 border-transparent': selectedDesign === design && !isVariantAvailable() && isDesignAvailable(design) // Red ring
-                                   }"
-                               class="border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium capitalize focus:outline-none cursor-pointer relative transition-colors duration-150 ease-in-out">
-                            <input type="radio" :id="'design-choice-'+design" name="design-choice" :value="design" x-model="selectedDesign" @change="selectDesign(design)" :disabled="!isDesignAvailable(design)" class="sr-only" :aria-label="design">
-                            <span x-text="design"></span>
-                            <!-- Cross-out overlay for unavailable designs -->
-                            <span x-show="!isDesignAvailable(design)" aria-hidden="true" class="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200">
-                                    <svg class="absolute inset-0 h-full w-full stroke-2 text-gray-300" viewBox="0 0 100 100" preserveAspectRatio="none" stroke="currentColor"><line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke"></line></svg>
-                                </span>
-                        </label>
-                    </template>
-                </div>
-            </fieldset>
+            <!-- Inventory display -->
+            <div class="flex items-center mb-4">
+                <span class="mr-2 text-sm font-medium text-gray-700">Availability:</span>
+                <span x-show="getInventoryForSelection() > 0" class="text-green-600 font-medium" x-text="`${getInventoryForSelection()} in stock`"></span>
+                <span x-show="getInventoryForSelection() <= 0" class="text-red-600 font-medium">Out of stock</span>
+            </div>
+
+            <!-- Shipping info -->
+            <div class="mb-6">
+                <span class="text-sm font-medium text-gray-700">Shipping:</span>
+                <span x-text="getShippingInfo()" class="text-sm ml-1"></span>
+            </div>
+
+            <!-- Add to Cart button -->
+            <button
+                    class="w-full bg-indigo-600 text-white py-3 px-6 rounded-md font-medium hover:bg-indigo-700 transition-colors duration-200 mb-6"
+                    :class="{'opacity-50 cursor-not-allowed': getInventoryForSelection() <= 0, 'opacity-100': getInventoryForSelection() > 0}"
+                    :disabled="getInventoryForSelection() <= 0"
+            >
+                Add to Cart
+            </button>
 
             <!-- Features -->
-            <div class="border-t pt-6 mt-6">
-                <h3 class="text-sm font-medium text-gray-900 mb-2">Features</h3>
-                <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+            <div class="border-t border-gray-200 pt-4" x-show="product.features && Object.keys(product.features).length > 0">
+                <h3 class="text-lg font-medium mb-3">Features</h3>
+                <ul class="space-y-2">
                     <template x-for="(value, key) in product.features" :key="key">
-                        <li><strong class="font-medium capitalize" x-text="key + ':'"></strong> <span x-text="value"></span></li>
+                        <li class="flex">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span x-text="`${formatFeatureKey(key)}: ${value}`"></span>
+                        </li>
                     </template>
                 </ul>
-            </div>
-
-            <!-- Shipping Info & Brand -->
-            <div class="border-t pt-4 flex justify-between items-center text-sm">
-                <div>
-                    <h3 class="font-medium text-gray-900">Shipping</h3>
-                    <p class="text-gray-600" x-text="getShippingInfo()"></p>
-                </div>
-                <span class="text-gray-500 italic" x-text="product.brand"></span>
-            </div>
-
-            <!-- Add to Cart Button -->
-            <div class="mt-8">
-                <button type="button"
-                        class="w-full bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150 ease-in-out"
-                        :class="{ 'hover:bg-indigo-700': isVariantAvailable(), 'opacity-50 cursor-not-allowed bg-gray-500': !isVariantAvailable() }"
-                        :disabled="!isVariantAvailable()">
-                    <span x-show="isVariantAvailable()">Add to cart</span>
-                    <span x-show="!isVariantAvailable()">Sold Out</span>
-                </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Alpine.js Product Viewer Component -->
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('productViewer', function(product) {
+            return {
+                product: product,
+                selectedImage: '',
+                selectedOptions: {},
+                isScrollLeftEnd: true,
+                isScrollRightEnd: false,
+
+                init() {
+                    if (this.product) {
+                        // Initialize selected image
+                        this.selectedImage = this.product.images && this.product.images.length > 0
+                            ? this.product.images[0]
+                            : '';
+
+                        // Initialize selected options
+                        this.selectedOptions = {};
+                        if (this.product.options) {
+                            for (const option in this.product.options) {
+                                if (this.product.options[option] && this.product.options[option].length > 0) {
+                                    this.selectedOptions[option] = this.product.options[option][0];
+                                }
+                            }
+                        }
+
+                        // Initialize scroll position check
+                        setTimeout(() => {
+                            this.checkScrollPosition();
+                        }, 100);
+                    }
+                },
+
+                hasThumbnails() {
+                    let count = 0;
+
+                    // Count main images
+                    count += this.product.images ? this.product.images.length : 0;
+
+                    // Count option images
+                    if (this.product.option_images) {
+                        for (const optionType in this.product.option_images) {
+                            for (const optionValue in this.product.option_images[optionType]) {
+                                count += this.product.option_images[optionType][optionValue].length;
+                            }
+                        }
+                    }
+
+                    // Count variant images
+                    if (this.product.variant_images) {
+                        for (const key in this.product.variant_images) {
+                            if (Array.isArray(this.product.variant_images[key])) {
+                                count += this.product.variant_images[key].length;
+                            } else {
+                                count += 1;
+                            }
+                        }
+                    }
+
+                    return count > 1;
+                },
+
+                formatPrice(price) {
+                    return '$' + parseFloat(price).toFixed(2);
+                },
+
+                formatOptionName(name) {
+                    return name.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+                },
+
+                formatFeatureKey(key) {
+                    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                },
+
+                formatVariantName(variant) {
+                    return variant
+                        .split('|')
+                        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                        .join(' + ');
+                },
+
+                calculateCurrentPrice() {
+                    if (!this.product) return 0;
+                    let price = parseFloat(this.product.base_price);
+
+                    // Add option price adjustments
+                    if (this.product.option_price_adjustments) {
+                        for (const option in this.selectedOptions) {
+                            const value = this.selectedOptions[option];
+                            if (
+                                this.product.option_price_adjustments[option] &&
+                                this.product.option_price_adjustments[option][value] !== undefined
+                            ) {
+                                price += parseFloat(this.product.option_price_adjustments[option][value]);
+                            }
+                        }
+                    }
+
+                    return price;
+                },
+
+                getShippingInfo() {
+                    if (!this.product) return '';
+                    if (this.product.free_shipping) {
+                        return "Free Shipping";
+                    }
+
+                    let shippingCost = parseFloat(this.product.base_shipping_cost);
+
+                    // Add shipping adjustments
+                    if (this.product.option_shipping_adjustments) {
+                        for (const option in this.selectedOptions) {
+                            const value = this.selectedOptions[option];
+                            if (
+                                this.product.option_shipping_adjustments[option] &&
+                                this.product.option_shipping_adjustments[option][value] !== undefined
+                            ) {
+                                shippingCost += parseFloat(this.product.option_shipping_adjustments[option][value]);
+                            }
+                        }
+                    }
+
+                    if (shippingCost <= 0) {
+                        return "Free Shipping";
+                    }
+
+                    return `$${shippingCost.toFixed(2)} Shipping`;
+                },
+
+                getInventoryForSelection() {
+                    if (!this.product) return 0;
+                    if (!this.product.hasVariants) {
+                        return this.product.stock;
+                    }
+
+                    const parts = [];
+                    let complete = true;
+
+                    for (const option in this.product.options) {
+                        if (!this.selectedOptions[option]) {
+                            complete = false;
+                            break;
+                        }
+                        parts.push(this.selectedOptions[option]);
+                    }
+
+                    if (!complete) return 0;
+
+                    const key = parts.join('|');
+                    return this.product.option_variants_stock[key] || 0;
+                },
+
+                getSelectedImage() {
+                    if (!this.product) return '';
+
+                    try {
+                        // If an image has been manually selected, use that
+                        if (this.selectedImage) {
+                            return this.selectedImage;
+                        }
+
+                        // Check if there's a specific variant image
+                        if (this.product.variant_images) {
+                            // Build a key from selected options
+                            const parts = [];
+                            for (const option in this.selectedOptions) {
+                                parts.push(this.selectedOptions[option]);
+                            }
+
+                            if (parts.length > 0) {
+                                const variantKey = parts.join('|');
+                                if (this.product.variant_images[variantKey]) {
+                                    const variantImage = this.product.variant_images[variantKey];
+                                    return Array.isArray(variantImage) ? variantImage[0] : variantImage;
+                                }
+                            }
+                        }
+
+                        // Check for option-specific images
+                        if (this.product.option_images) {
+                            for (const option in this.selectedOptions) {
+                                const value = this.selectedOptions[option];
+                                if (
+                                    this.product.option_images[option] &&
+                                    this.product.option_images[option][value] &&
+                                    this.product.option_images[option][value].length > 0
+                                ) {
+                                    return this.product.option_images[option][value][0];
+                                }
+                            }
+                        }
+
+                        // Default to first product image
+                        return this.product.images && this.product.images.length > 0
+                            ? this.product.images[0]
+                            : '';
+                    } catch (error) {
+                        console.error("Error in getSelectedImage:", error);
+                        return this.product.images && this.product.images.length > 0
+                            ? this.product.images[0]
+                            : '';
+                    }
+                },
+
+                selectImage(image) {
+                    this.selectedImage = image;
+                },
+
+                selectOption(option, value) {
+                    this.selectedOptions[option] = value;
+                    // Reset selected image to force selection based on variant
+                    this.selectedImage = '';
+                },
+
+                selectOptionFromImage(optionType, optionValue) {
+                    this.selectedOptions[optionType] = optionValue;
+                },
+
+                selectVariantFromKey(key) {
+                    const parts = key.split('|');
+                    const optionNames = Object.keys(this.product.options);
+
+                    for (let i = 0; i < Math.min(parts.length, optionNames.length); i++) {
+                        this.selectedOptions[optionNames[i]] = parts[i];
+                    }
+                },
+
+                handleImageError(event) {
+                    event.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                },
+
+                // Thumbnail scrolling
+                scrollThumbnails(direction) {
+                    const container = this.$refs.thumbnailsContainer;
+                    if (!container) return;
+
+                    const scrollAmount = container.clientWidth * 0.75;
+
+                    if (direction === 'left') {
+                        container.scrollLeft -= scrollAmount;
+                    } else {
+                        container.scrollLeft += scrollAmount;
+                    }
+
+                    setTimeout(() => {
+                        this.checkScrollPosition();
+                    }, 100);
+                },
+
+                checkScrollPosition() {
+                    const container = this.$refs.thumbnailsContainer;
+                    if (!container) return;
+
+                    this.isScrollLeftEnd = container.scrollLeft <= 0;
+                    this.isScrollRightEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
+                }
+            };
+        });
+    });
+
+    // Initialize the product data
+    const product = {
+        // Basic Information
+        id: 2501,
+        name: "Premium Cotton Graphic T-Shirt",
+        description: "Ultra-soft premium cotton t-shirt with original graphic designs. Pre-shrunk fabric with modern fit and reinforced stitching for durability.",
+        base_price: 24.99,
+        base_shipping_cost: 4.99,
+        free_shipping: false,
+        sku: "APPRL-TS-2501",
+        slug: "premium-cotton-graphic-tshirt",
+        brand: "Urban Threads",
+        rating: 4.8,
+        reviews_count: 236,
+        // Status Information
+        status: "active",
+        isFeatured: true,
+        isOnSale: false, // Can be overridden by logic later if needed
+        requiresShipping: true,
+        // Stock Management
+        requiresInventoryTracking: true,
+        stock: 25, // Default stock - often overridden by variants
+        hasVariants: true,
+        totalVariantStock: 485,
+        lowStockThreshold: 10,
+        // Product Details
+        features: { material: "100% Ringspun Cotton, 180gsm", fit: "Modern fit, slightly tapered", neckline: "Reinforced crew neck", care: "Machine wash cold, tumble dry low", printing: "Water-based eco-friendly inks", origin: "Ethically manufactured", sustainability: "GOTS certified organic cotton" },
+        // Main product images
+        images: [
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop"
+        ],
+        // Product Configuration
+        options: {
+            "size": ["xs", "s", "m", "l", "xl", "2xl"],
+            "color": ["white", "black", "navy", "heather gray"],
+            "design": ["mountain", "wave", "sunset", "minimal"]
+        },
+        // Option Images
+        option_images: {
+            "color": {
+                "white": ["https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&auto=format&fit=crop"],
+                "black": ["https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&auto=format&fit=crop"],
+                "navy": ["https://images.unsplash.com/photo-1618354691438-25bc04584c23?w=800&auto=format&fit=crop"],
+                "heather gray": ["https://images.unsplash.com/photo-1618354691229-a8f91e7a3eb9?w=800&auto=format&fit=crop"]
+            },
+            "design": {
+                "mountain": ["https://images.unsplash.com/photo-1564412811189-a6d55a176f6c?w=800&auto=format&fit=crop"],
+                "wave": ["https://images.unsplash.com/photo-1533577116850-9cc66cad8a9b?w=800&auto=format&fit=crop"],
+                "sunset": ["https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=800&auto=format&fit=crop"],
+                "minimal": ["https://images.unsplash.com/photo-1567632661587-deaffec88b38?w=800&auto=format&fit=crop"]
+            }
+        },
+        // Variant Images - Images for specific combinations of options
+        variant_images: {
+            "white|mountain": "https://images.unsplash.com/photo-1527719327859-c6ce80353573?w=800&auto=format&fit=crop",
+            "black|mountain": "https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=800&auto=format&fit=crop",
+            "white|wave": "https://images.unsplash.com/photo-1574180566232-aaad1b5b8450?w=800&auto=format&fit=crop",
+            "navy|sunset": ["https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=800&auto=format&fit=crop", "https://images.unsplash.com/photo-1622445275576-721325763afe?w=800&auto=format&fit=crop"],
+            "heather gray|minimal": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&auto=format&fit=crop"
+        },
+        // Option Variants Stock
+        option_variants_stock: {
+            "xs|white|mountain": 20, "s|white|mountain": 30, "m|white|mountain": 25, "l|white|mountain": 20, "xl|white|mountain": 15, "2xl|white|mountain": 10,
+            "xs|black|mountain": 15, "s|black|mountain": 25, "m|black|mountain": 30, "l|black|mountain": 25, "xl|black|mountain": 15, "2xl|black|mountain": 10,
+            "xs|navy|mountain": 10, "s|navy|mountain": 15, "m|navy|mountain": 20, "l|navy|mountain": 15, "xl|navy|mountain": 10, "2xl|navy|mountain": 5,
+            "xs|white|wave": 10, "s|white|wave": 15, "m|white|wave": 20, "l|white|wave": 15, "xl|white|wave": 10, "2xl|white|wave": 5,
+            "s|black|wave": 10, "m|black|wave": 15, "l|black|wave": 15, "xl|black|wave": 10,
+            "s|navy|sunset": 10, "m|navy|sunset": 15, "l|navy|sunset": 15, "xl|navy|sunset": 10,
+            "s|heather gray|minimal": 15, "m|heather gray|minimal": 20, "l|heather gray|minimal": 15, "xl|heather gray|minimal": 10
+        },
+        // Option Price Adjustments
+        option_price_adjustments: { "size:xl": 2.00, "size:2xl": 4.00, "color:heather gray": 1.50, "design:sunset": 2.00 },
+        // Option Shipping Adjustments
+        option_shipping_adjustments: { "size:xl": 2.00, "size:2xl": 3.50 },
+        // Physical Attributes
+        weight: { value: 0.22, unit: 'kg' },
+        dimensions: { length: 30, width: 25, height: 2, unit: 'cm' },
+        // Option Dimension Overrides
+        option_dimension_overrides: { "size:2xl": { weight: { value: 0.28, unit: 'kg' }, dimensions: { length: 35, width: 30, height: 2, unit: 'cm' } } },
+        // Categories
+        categories: [101, 105, 110], // Apparel, T-Shirts, Graphic Tees
+        // Related Products
+        upselling: [2510, 2515], // Premium hoodie, long sleeve version
+        crossSelling: [2601, 2701], // Joggers, hat with matching designs
+        relatedProducts: [2502, 2503], // Other t-shirt designs
+        // Timestamps
+        createdAt: "2025-02-15T10:20:00Z",
+        updatedAt: "2025-04-01T16:45:00Z"
+    };
+</script>
 </body>
 </html>
