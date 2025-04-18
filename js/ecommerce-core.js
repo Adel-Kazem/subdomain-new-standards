@@ -10,8 +10,8 @@ document.addEventListener('alpine:init', () => {
             // State
             searchQuery: '',
             selectedCategory: null,
-            view: config.defaultView || 'grid', // grid or list
-            sortBy: config.defaultSort || 'featured', // featured, price-asc, price-desc, name, rating
+            view: config.defaultView || 'grid',
+            sortBy: config.defaultSort || 'featured',
 
             // Config
             productData: config.products || [],
@@ -54,29 +54,53 @@ document.addEventListener('alpine:init', () => {
                 this.saveViewPreference();
             },
 
+            // Helper: Recursively get all descendant category IDs for a selected category
+            getAllDescendantCategoryIds(parentId) {
+                let ids = [];
+                this.categoryData.forEach(cat => {
+                    if (cat.parent_id === parentId) {
+                        ids.push(cat.id);
+                        ids = ids.concat(this.getAllDescendantCategoryIds(cat.id));
+                    }
+                });
+                return ids;
+            },
+
             // Filter and sort products
             getFilteredProducts() {
+                let categoryIdsToCheck = [];
+                if (this.selectedCategory !== null) {
+                    categoryIdsToCheck = [
+                        this.selectedCategory,
+                        ...this.getAllDescendantCategoryIds(this.selectedCategory)
+                    ];
+                }
+
                 // First filter by category and search query
                 let filtered = this.productData.filter(product =>
-                    (this.selectedCategory === null || product.categoryId === this.selectedCategory) &&
+                    (this.selectedCategory === null ||
+                        (Array.isArray(product.categories) &&
+                            product.categories.some(catId => categoryIdsToCheck.includes(catId)))
+                    ) &&
                     (this.searchQuery === '' ||
-                        product.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                        product.description.toLowerCase().includes(this.searchQuery.toLowerCase()))
+                        (product.name && product.name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+                        (product.description && product.description.toLowerCase().includes(this.searchQuery.toLowerCase()))
+                    )
                 );
 
                 // Then sort
-                switch(this.sortBy) {
+                switch (this.sortBy) {
                     case 'price-asc':
-                        filtered.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+                        filtered.sort((a, b) => (a.salePrice || a.base_price || a.price) - (b.salePrice || b.base_price || b.price));
                         break;
                     case 'price-desc':
-                        filtered.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+                        filtered.sort((a, b) => (b.salePrice || b.base_price || b.price) - (a.salePrice || a.base_price || a.price));
                         break;
                     case 'name':
                         filtered.sort((a, b) => a.name.localeCompare(b.name));
                         break;
                     case 'rating':
-                        filtered.sort((a, b) => b.rating - a.rating);
+                        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
                         break;
                     case 'featured':
                     default:

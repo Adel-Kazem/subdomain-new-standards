@@ -3,770 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products | Your Store</title>
-
-    <script src="js/products.js"></script>
-    <script src="js/categories.js"></script>
-    <!-- Alpine.js and TailwindCSS -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <title>E-commerce Products</title>
+    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Custom Styles -->
+    <!-- Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+    <!-- External JS Files -->
+    <script src="js/categories.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/ecommerce-core.js"></script>
     <style>
         [x-cloak] { display: none !important; }
     </style>
-
-    <!-- Core eCommerce JavaScript -->
-    <script>
-        document.addEventListener('alpine:init', () => {
-            // Product Catalog Component
-            Alpine.data('productCatalog', (config = {}) => {
-                return {
-                    // State
-                    searchQuery: '',
-                    selectedCategory: null,
-                    selectedParentCategory: null,
-                    view: localStorage.getItem('preferredView') || 'grid',
-                    sortBy: 'featured',
-                    isFilterOpen: false,
-
-                    // Products and Categories
-                    products: PRODUCTS || [],
-                    categories: CATEGORIES || [],
-
-                    // Initialize
-                    init() {
-                        // Initialize from URL parameters
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const categoryParam = urlParams.get('category');
-                        if (categoryParam) {
-                            this.selectedCategory = parseInt(categoryParam);
-                        }
-
-                        // On mobile, start with filters closed
-                        this.isFilterOpen = window.innerWidth >= 768;
-                    },
-
-                    // Toggle filter visibility on mobile
-                    toggleFilter() {
-                        this.isFilterOpen = !this.isFilterOpen;
-                    },
-
-                    // Set view (grid or list) and save preference
-                    setView(viewType) {
-                        this.view = viewType;
-                        localStorage.setItem('preferredView', viewType);
-                    },
-
-                    // Get all parent categories (top-level)
-                    getParentCategories() {
-                        return this.categories.filter(cat => cat.parent_id === null);
-                    },
-
-                    // Get subcategories of a parent category
-                    getSubcategories(parentId) {
-                        return this.categories.filter(cat => cat.parent_id === parentId);
-                    },
-
-                    // Get all categories to display in the filter sidebar
-                    getDisplayCategories() {
-                        if (this.selectedParentCategory === null) {
-                            return this.getParentCategories();
-                        } else {
-                            return this.getSubcategories(this.selectedParentCategory);
-                        }
-                    },
-
-                    // Get category by ID
-                    getCategoryById(categoryId) {
-                        return this.categories.find(c => c.id === categoryId);
-                    },
-
-                    // Handle parent category selection
-                    selectParentCategory(categoryId) {
-                        this.selectedParentCategory = categoryId;
-                        this.selectedCategory = null;
-                    },
-
-                    // Clear all filters
-                    clearFilters() {
-                        this.searchQuery = '';
-                        this.selectedCategory = null;
-                        this.selectedParentCategory = null;
-                        this.sortBy = 'featured';
-                    },
-
-                    // Get filtered and sorted products
-                    getFilteredProducts() {
-                        // First get products from selected category or all products if no category selected
-                        let filteredProducts = [];
-
-                        if (this.selectedCategory !== null) {
-                            // Get products from the specific category
-                            const category = this.getCategoryById(this.selectedCategory);
-                            if (category && category.productIds) {
-                                filteredProducts = this.products.filter(product =>
-                                    category.productIds.includes(product.id)
-                                );
-                            }
-                        } else if (this.selectedParentCategory !== null) {
-                            // Get products from all subcategories
-                            const subcategories = this.getSubcategories(this.selectedParentCategory);
-                            const allProductIds = [];
-
-                            subcategories.forEach(category => {
-                                if (category.productIds) {
-                                    allProductIds.push(...category.productIds);
-                                }
-                            });
-
-                            filteredProducts = this.products.filter(product =>
-                                allProductIds.includes(product.id)
-                            );
-                        } else {
-                            // No category filter, show all products
-                            filteredProducts = [...this.products];
-                        }
-
-                        // Then filter by search query
-                        if (this.searchQuery.trim() !== '') {
-                            const query = this.searchQuery.toLowerCase();
-                            filteredProducts = filteredProducts.filter(product =>
-                                product.name.toLowerCase().includes(query) ||
-                                product.description.toLowerCase().includes(query) ||
-                                (product.brand && product.brand.toLowerCase().includes(query))
-                            );
-                        }
-
-                        // Then sort
-                        switch(this.sortBy) {
-                            case 'price-asc':
-                                filteredProducts.sort((a, b) => (a.salePrice || a.base_price || a.price) - (b.salePrice || b.base_price || b.price));
-                                break;
-                            case 'price-desc':
-                                filteredProducts.sort((a, b) => (b.salePrice || b.base_price || b.price) - (a.salePrice || a.base_price || a.price));
-                                break;
-                            case 'name':
-                                filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
-                                break;
-                            case 'rating':
-                                filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-                                break;
-                            case 'newest':
-                                filteredProducts.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                                break;
-                            case 'featured':
-                            default:
-                                filteredProducts.sort((a, b) => {
-                                    if (a.isFeatured && !b.isFeatured) return -1;
-                                    if (!a.isFeatured && b.isFeatured) return 1;
-                                    return 0;
-                                });
-                        }
-
-                        return filteredProducts;
-                    },
-
-                    // Format price display with fallbacks
-                    formatPrice(product) {
-                        const price = product.base_price || product.price || 0;
-                        return '$' + price.toFixed(2);
-                    },
-
-                    // Format sale price display with fallbacks
-                    formatSalePrice(product) {
-                        if (product.salePrice) {
-                            return '$' + product.salePrice.toFixed(2);
-                        }
-                        return null;
-                    },
-
-                    // Get main product image
-                    getMainImage(product) {
-                        if (!product.images) return 'https://via.placeholder.com/300';
-
-                        return Array.isArray(product.images) ?
-                            product.images[0] : product.images;
-                    },
-
-                    // Handle adding product to cart
-                    addToCart(product) {
-                        // For products with variants, go to product detail page
-                        if (product.hasVariants || (product.options && Object.keys(product.options).length > 0)) {
-                            window.location.href = `/product/${product.slug || product.id}`;
-                            return;
-                        }
-
-                        // For simple products, add directly to cart
-                        Alpine.store('cart').addItem(product);
-                    }
-                };
-            });
-
-            // Cart Store
-            Alpine.store('cart', {
-                items: [],
-                init() {
-                    // Load cart from localStorage
-                    const savedCart = localStorage.getItem('cartItems');
-                    if (savedCart) {
-                        try {
-                            this.items = JSON.parse(savedCart);
-                        } catch (e) {
-                            console.error('Failed to parse saved cart:', e);
-                            this.items = [];
-                        }
-                    }
-                },
-                saveCart() {
-                    localStorage.setItem('cartItems', JSON.stringify(this.items));
-                },
-                addItem(product, quantity = 1, options = {}) {
-                    // Check if product already exists in cart
-                    const existingItemIndex = this.items.findIndex(item =>
-                        item.id === product.id &&
-                        JSON.stringify(item.options) === JSON.stringify(options)
-                    );
-
-                    if (existingItemIndex >= 0) {
-                        // Update quantity of existing item
-                        this.items[existingItemIndex].quantity += quantity;
-                    } else {
-                        // Add new item
-                        this.items.push({
-                            id: product.id,
-                            name: product.name,
-                            price: product.salePrice || product.base_price || product.price,
-                            image: this.getProductImage(product),
-                            quantity: quantity,
-                            options: options
-                        });
-                    }
-
-                    this.saveCart();
-                    Alpine.store('ui').showCartNotification();
-                },
-                getProductImage(product) {
-                    if (!product.images) return 'https://via.placeholder.com/100';
-                    return Array.isArray(product.images) ? product.images[0] : product.images;
-                },
-                getTotalItems() {
-                    return this.items.reduce((total, item) => total + item.quantity, 0);
-                }
-            });
-
-            // UI Store
-            Alpine.store('ui', {
-                isMenuOpen: false,
-                showCartNotification: false,
-                notificationTimeout: null,
-
-                toggleMenu() {
-                    this.isMenuOpen = !this.isMenuOpen;
-                },
-                closeMenu() {
-                    this.isMenuOpen = false;
-                },
-                showCartNotification() {
-                    // Clear existing timeout
-                    if (this.notificationTimeout) {
-                        clearTimeout(this.notificationTimeout);
-                    }
-
-                    // Show notification
-                    this.showCartNotification = true;
-
-                    // Auto-hide after 3 seconds
-                    this.notificationTimeout = setTimeout(() => {
-                        this.showCartNotification = false;
-                    }, 3000);
-                }
-            });
-        });
-    </script>
 </head>
-
 <body class="bg-gray-50 text-gray-800">
-<!-- Header/Navigation would go here -->
-<header class="bg-white shadow">
+<!-- Header -->
+<header class="bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" class="font-bold text-2xl text-indigo-600">Your Store</a>
-
-        <div class="flex items-center gap-4">
-            <!-- Search button for mobile -->
-            <button type="button" class="md:hidden text-gray-500 hover:text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </button>
-
-            <!-- Cart button -->
-            <a href="/cart" class="relative text-gray-500 hover:text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span
-                        x-data
-                        x-show="$store.cart.getTotalItems() > 0"
-                        x-text="$store.cart.getTotalItems()"
-                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                ></span>
-            </a>
-
-            <!-- Menu button for mobile -->
-            <button
-                    type="button"
-                    class="md:hidden text-gray-500 hover:text-gray-700"
-                    @click="$store.ui.toggleMenu()"
-            >
+        <div class="flex items-center">
+            <a href="/" class="text-2xl font-bold text-indigo-600">ShopEase</a>
+        </div>
+        <div class="flex items-center space-x-6">
+            <nav class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-indigo-600 font-medium">Home</a>
+                <a href="#" class="text-indigo-600 font-medium">Products</a>
+                <a href="#" class="hover:text-indigo-600 font-medium">About</a>
+                <a href="#" class="hover:text-indigo-600 font-medium">Contact</a>
+            </nav>
+            <div class="relative" x-data="{ isCartOpen: false }">
+                <button @click="isCartOpen = !isCartOpen" class="flex items-center hover:text-indigo-600 relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span x-show="$store.cart.getTotalItems() > 0" x-text="$store.cart.getTotalItems()"
+                          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
+                </button>
+                <!-- Mini Cart -->
+                <div x-show="isCartOpen" @click.away="isCartOpen = false" x-cloak
+                     class="absolute right-0 mt-2 w-72 bg-white rounded shadow-lg z-10 p-4">
+                    <h3 class="font-bold mb-2">Your Cart</h3>
+                    <div x-show="$store.cart.items.length === 0" class="py-3 text-center text-gray-500">
+                        Your cart is empty
+                    </div>
+                    <div x-show="$store.cart.items.length > 0">
+                        <div class="max-h-64 overflow-y-auto">
+                            <template x-for="(item, index) in $store.cart.items" :key="index">
+                                <div class="flex items-center py-2 border-b border-gray-100">
+                                    <img :src="item.image" :alt="item.name" class="w-12 h-12 object-cover rounded">
+                                    <div class="ml-3 flex-1">
+                                        <div x-text="item.name" class="text-sm font-medium"></div>
+                                        <div class="flex items-center text-sm text-gray-500">
+                                            <span x-text="item.quantity"></span>
+                                            <span class="mx-1">×</span>
+                                            <span x-text="'$' + item.price.toFixed(2)"></span>
+                                        </div>
+                                    </div>
+                                    <button @click="$store.cart.removeItem(index)" class="text-gray-400 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="mt-3 flex justify-between">
+                            <span class="font-medium">Total:</span>
+                            <span x-text="$store.cart.getFormattedTotal()" class="font-bold"></span>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button @click="$store.cart.clearCart()" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100">
+                                Clear
+                            </button>
+                            <a href="#" class="flex-1 bg-indigo-600 text-white text-center py-1 rounded text-sm hover:bg-indigo-700">
+                                Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button @click="$store.ui.toggleMenu()" class="md:hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
         </div>
     </div>
+    <!-- Mobile Menu -->
+    <div x-show="$store.ui.isMenuOpen" x-cloak class="md:hidden bg-white border-t">
+        <div class="container mx-auto px-4 py-3 space-y-3">
+            <a href="/" class="block hover:text-indigo-600">Home</a>
+            <a href="#" class="block text-indigo-600">Products</a>
+            <a href="#" class="block hover:text-indigo-600">About</a>
+            <a href="#" class="block hover:text-indigo-600">Contact</a>
+        </div>
+    </div>
 </header>
 
-<!-- Main Products Page -->
-<main class="container mx-auto px-4 py-8" x-data="productCatalog()">
-    <!-- Page Title -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold">Products</h1>
-        <p class="text-gray-600 mt-2">Browse our collection of high-quality products</p>
-    </div>
+<!-- Product Catalog -->
+<div class="container mx-auto px-4 py-8"
+     x-data="productCatalog({
+            products: PRODUCTS,
+            categories: CATEGORIES,
+            defaultView: 'grid',
+            defaultSort: 'featured'
+         })">
 
-    <!-- Mobile Filter Toggle -->
-    <div class="md:hidden mb-4">
-        <button
-                @click="toggleFilter()"
-                class="w-full py-2 px-4 bg-white border border-gray-300 rounded shadow-sm flex items-center justify-between"
-        >
-            <span>Filters & Categories</span>
-            <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    :class="isFilterOpen ? 'transform rotate-180' : ''"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-8">
-        <!-- Sidebar Filters -->
-        <div
-                class="w-full md:w-1/4 lg:w-1/5"
-                x-show="isFilterOpen"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform -translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 transform translate-y-0"
-                x-transition:leave-end="opacity-0 transform -translate-y-4"
-        >
-            <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                <!-- Search -->
-                <div class="mb-6">
-                    <h3 class="font-semibold text-lg mb-2">Search</h3>
-                    <div class="relative">
-                        <input
-                                type="text"
-                                x-model="searchQuery"
-                                placeholder="Search products..."
-                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        >
-                        <button
-                                type="button"
-                                @click="searchQuery = ''"
-                                x-show="searchQuery !== ''"
-                                class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Categories -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="font-semibold text-lg">Categories</h3>
-                        <button
-                                x-show="selectedParentCategory !== null"
-                                @click="selectedParentCategory = null"
-                                class="text-sm text-indigo-600 hover:text-indigo-800"
-                        >
-                            ← Back
-                        </button>
-                    </div>
-
-                    <ul class="space-y-2">
-                        <template x-for="category in getDisplayCategories()" :key="category.id">
-                            <li>
-                                <button
-                                        @click="selectedParentCategory === null ? selectParentCategory(category.id) : selectedCategory = category.id"
-                                        class="w-full text-left px-2 py-1.5 rounded transition-colors flex items-center justify-between"
-                                        :class="selectedCategory === category.id ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-gray-100'"
-                                >
-                                    <span x-text="category.name"></span>
-
-                                    <!-- Show arrow for parent categories with children -->
-                                    <svg
-                                            x-show="selectedParentCategory === null && getSubcategories(category.id).length > 0"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-4 w-4 text-gray-500"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                    >
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-
-                <!-- Sort Options (for mobile) -->
-                <div class="md:hidden mb-6">
-                    <h3 class="font-semibold text-lg mb-2">Sort By</h3>
-                    <select
-                            x-model="sortBy"
-                            class="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                        <option value="featured">Featured</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="name">Name</option>
-                        <option value="rating">Rating</option>
-                        <option value="newest">Newest</option>
-                    </select>
-                </div>
-
-                <!-- Clear Filters -->
-                <div class="border-t border-gray-200 pt-4">
-                    <button
-                            @click="clearFilters"
-                            class="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded text-gray-800 transition-colors"
-                    >
-                        Clear All Filters
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Products Section -->
-        <div class="w-full md:w-3/4 lg:w-4/5">
-            <!-- Controls bar -->
-            <div class="mb-6 flex flex-wrap items-center justify-between bg-white p-4 rounded shadow-sm border border-gray-200">
-                <!-- Result Count -->
-                <div class="mb-3 sm:mb-0">
-                    <p class="text-gray-600">
-                        Showing <span x-text="getFilteredProducts().length"></span> products
-                    </p>
-                </div>
-
-                <!-- Sort and View Controls -->
-                <div class="flex items-center space-x-4">
-                    <!-- Sort Dropdown (desktop) -->
-                    <div class="hidden md:block">
-                        <select
-                                x-model="sortBy"
-                                class="border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                        >
-                            <option value="featured">Featured</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                            <option value="name">Name</option>
-                            <option value="rating">Rating</option>
-                            <option value="newest">Newest</option>
-                        </select>
-                    </div>
-
-                    <!-- View Toggle -->
-                    <div class="flex border border-gray-300 rounded overflow-hidden">
-                        <button
-                                @click="setView('grid')"
-                                class="px-3 py-1.5 flex items-center justify-center transition-colors"
-                                :class="view === 'grid' ? 'bg-indigo-100 text-indigo-700' : 'bg-white hover:bg-gray-100'"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                        </button>
-                        <button
-                                @click="setView('list')"
-                                class="px-3 py-1.5 flex items-center justify-center transition-colors"
-                                :class="view === 'list' ? 'bg-indigo-100 text-indigo-700' : 'bg-white hover:bg-gray-100'"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- No Results Message -->
-            <div
-                    x-show="getFilteredProducts().length === 0"
-                    class="bg-white rounded shadow-sm border border-gray-200 p-8 text-center"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 class="text-lg font-semibold mb-2">No products found</h3>
-                <p class="text-gray-600 mb-4">Try changing your filters or search query</p>
-                <button
-                        @click="clearFilters"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                    Clear Filters
+    <!-- Banner -->
+    <div class="bg-indigo-600 rounded-lg mb-8 relative overflow-hidden">
+        <div class="p-8 md:p-12 relative z-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Discover Our Products</h1>
+            <p class="text-indigo-100 max-w-xl mb-6">Browse our collection of high-quality products carefully selected for you.</p>
+            <div class="relative max-w-md">
+                <input x-model="searchQuery" type="text" placeholder="Search products..."
+                       class="w-full py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <button class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </button>
             </div>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-50"></div>
+    </div>
 
-            <!-- Grid View -->
-            <div
-                    x-show="view === 'grid' && getFilteredProducts().length > 0"
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-                <template x-for="product in getFilteredProducts()" :key="product.id">
-                    <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden transition-transform hover:shadow hover:-translate-y-1">
-                        <!-- Product Image -->
-                        <a :href="`/product/${product.slug || product.id}`" class="block aspect-square overflow-hidden bg-gray-100">
-                            <img
-                                    :src="getMainImage(product)"
-                                    :alt="product.name"
-                                    class="w-full h-full object-cover object-center"
-                            >
-                        </a>
+    <!-- Filters and Controls -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <!-- Category Filter -->
+        <div class="flex items-center overflow-x-auto pb-2 md:pb-0 gap-2">
+            <button @click="selectedCategory = null"
+                    :class="selectedCategory === null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                All Products
+            </button>
+            <!-- Top-level Categories -->
+            <template x-for="category in categoryData.filter(c => c.parent_id === null)" :key="category.id">
+                <button @click="selectedCategory = category.id"
+                        :class="selectedCategory === category.id ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
+                        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                    <span x-text="category.name"></span>
+                </button>
+            </template>
+        </div>
 
-                        <!-- Product Info -->
-                        <div class="p-4">
-                            <!-- Rating -->
-                            <div x-show="product.rating" class="flex items-center mb-1">
-                                <div class="flex text-amber-400">
-                                    <template x-for="i in 5">
-                                        <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="h-4 w-4"
-                                                :class="i <= Math.round(product.rating) ? 'text-amber-400 fill-current' : 'text-gray-300 fill-current'"
-                                                viewBox="0 0 20 20"
-                                        >
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                        </svg>
-                                    </template>
-                                </div>
-                                <span x-show="product.reviews_count" class="text-xs text-gray-500 ml-1" x-text="`(${product.reviews_count})`"></span>
-                            </div>
-
-                            <!-- Product Name -->
-                            <a
-                                    :href="`/product/${product.slug || product.id}`"
-                                    class="block font-medium text-gray-900 hover:text-indigo-600 mb-1 line-clamp-2"
-                                    x-text="product.name"
-                            ></a>
-
-                            <!-- Product Brand -->
-                            <p
-                                    x-show="product.brand"
-                                    class="text-sm text-gray-500 mb-2"
-                                    x-text="product.brand"
-                            ></p>
-
-                            <!-- Product Price -->
-                            <div class="flex items-center">
-                                    <span
-                                            x-show="formatSalePrice(product)"
-                                            class="text-lg font-semibold text-indigo-600"
-                                            x-text="formatSalePrice(product)"
-                                    ></span>
-                                <span
-                                        class="text-lg font-semibold"
-                                        :class="{'text-gray-900': !formatSalePrice(product), 'text-gray-500 line-through ml-2 text-sm': formatSalePrice(product)}"
-                                        x-text="formatPrice(product)"
-                                ></span>
-                            </div>
-
-                            <!-- Badges -->
-                            <div class="flex mt-2 space-x-2">
-                                    <span
-                                            x-show="product.hasVariants || (product.options && Object.keys(product.options).length > 0)"
-                                            class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded"
-                                    >Options Available</span>
-                                <span
-                                        x-show="product.isFeatured"
-                                        class="px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded"
-                                >Featured</span>
-                                <span
-                                        x-show="product.isOnSale || formatSalePrice(product)"
-                                        class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded"
-                                >Sale</span>
-                            </div>
-                        </div>
-
-                        <!-- Add to Cart -->
-                        <div class="px-4 pb-4">
-                            <button
-                                    @click="addToCart(product)"
-                                    class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors flex items-center justify-center"
-                                    :class="{'opacity-50 cursor-not-allowed': product.stock === 0}"
-                                    :disabled="product.stock === 0"
-                            >
-                                <span x-show="product.hasVariants || (product.options && Object.keys(product.options).length > 0)">View Options</span>
-                                <span x-show="!(product.hasVariants || (product.options && Object.keys(product.options).length > 0))">
-                                        <span x-show="product.stock === 0">Out of Stock</span>
-                                        <span x-show="product.stock !== 0">Add to Cart</span>
-                                    </span>
-                            </button>
-                        </div>
-                    </div>
-                </template>
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Sort Dropdown -->
+            <div class="relative">
+                <select x-model="sortBy" class="block w-full py-2 pl-3 pr-10 text-sm bg-white border rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <option value="featured">Featured</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name">Name</option>
+                    <option value="rating">Rating</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
             </div>
 
-            <!-- List View -->
-            <div
-                    x-show="view === 'list' && getFilteredProducts().length > 0"
-                    class="space-y-6"
-            >
-                <template x-for="product in getFilteredProducts()" :key="product.id">
-                    <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow p-0 sm:p-4 flex flex-col sm:flex-row">
-                        <!-- Product Image -->
-                        <a :href="`/product/${product.slug || product.id}`" class="block w-full sm:w-48 h-48 shrink-0 overflow-hidden bg-gray-100">
-                            <img
-                                    :src="getMainImage(product)"
-                                    :alt="product.name"
-                                    class="w-full h-full object-cover object-center"
-                            >
+            <!-- View Toggle -->
+            <div class="flex border rounded-md overflow-hidden">
+                <button @click="setView('grid')" :class="view === 'grid' ? 'bg-gray-100' : 'bg-white'" class="p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                </button>
+                <button @click="setView('list')" :class="view === 'list' ? 'bg-gray-100' : 'bg-white'" class="p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Display -->
+    <div class="mb-8">
+        <!-- Results count -->
+        <div class="mb-4 text-sm text-gray-500">
+            Showing <span x-text="getFilteredProducts().length"></span> products
+            <span x-show="selectedCategory !== null">
+                    in <span x-text="getCategoryName(selectedCategory)"></span>
+                </span>
+            <span x-show="searchQuery !== ''">
+                    matching "<span x-text="searchQuery"></span>"
+                </span>
+        </div>
+
+        <!-- Grid View -->
+        <div x-show="view === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <template x-for="product in getFilteredProducts()" :key="product.id">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                    <!-- Product image -->
+                    <a :href="'product.html?id=' + product.id" class="block h-48 overflow-hidden">
+                        <img :src="Array.isArray(product.images) ? product.images[0] : product.images"
+                             :alt="product.name"
+                             class="w-full h-full object-cover hover:opacity-90 transition-opacity">
+                    </a>
+
+                    <!-- Product info -->
+                    <div class="p-4">
+                        <!-- Brand -->
+                        <div class="text-xs text-gray-500 uppercase tracking-wider" x-text="product.brand"></div>
+
+                        <!-- Name -->
+                        <a :href="'product.html?id=' + product.id" class="block mt-1 text-sm font-medium hover:text-indigo-600 truncate" x-text="product.name"></a>
+
+                        <!-- Rating -->
+                        <div class="mt-1 flex items-center">
+                            <div class="flex text-yellow-400">
+                                <template x-for="i in 5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" :fill="i <= Math.round(product.rating) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                    </svg>
+                                </template>
+                            </div>
+                            <span class="ml-1 text-xs text-gray-500">
+                                    (<span x-text="product.reviews_count"></span>)
+                                </span>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mt-2 flex items-center">
+                            <template x-if="product.salePrice">
+                                <div>
+                                    <span class="line-through text-gray-400 text-xs" x-text="'$' + product.base_price.toFixed(2)"></span>
+                                    <span class="ml-1 text-red-600 font-semibold" x-text="'$' + product.salePrice.toFixed(2)"></span>
+                                </div>
+                            </template>
+                            <template x-if="!product.salePrice">
+                                <span class="font-semibold" x-text="'$' + product.base_price.toFixed(2)"></span>
+                            </template>
+                        </div>
+
+                        <!-- Add to cart button -->
+                        <button @click.stop.prevent="$store.cart.addItem(product); $event.target.classList.add('animate-pulse'); setTimeout(() => $event.target.classList.remove('animate-pulse'), 1000)"
+                                class="mt-3 w-full bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- List View -->
+        <div x-show="view === 'list'" class="space-y-4">
+            <template x-for="product in getFilteredProducts()" :key="product.id">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="flex flex-col md:flex-row">
+                        <!-- Product image -->
+                        <a :href="'product.html?id=' + product.id" class="md:w-1/4 h-48 md:h-auto overflow-hidden">
+                            <img :src="Array.isArray(product.images) ? product.images[0] : product.images"
+                                 :alt="product.name"
+                                 class="w-full h-full object-cover hover:opacity-90 transition-opacity">
                         </a>
 
-                        <!-- Product Info -->
-                        <div class="p-4 sm:p-0 sm:pl-6 flex-1 flex flex-col">
-                            <div class="flex-1">
-                                <!-- Product Name -->
-                                <a
-                                        :href="`/product/${product.slug || product.id}`"
-                                        class="block font-medium text-lg text-gray-900 hover:text-indigo-600 mb-1"
-                                        x-text="product.name"
-                                ></a>
+                        <!-- Product info -->
+                        <div class="p-4 md:w-3/4 flex flex-col">
+                            <div class="flex-grow">
+                                <!-- Brand -->
+                                <div class="text-xs text-gray-500 uppercase tracking-wider" x-text="product.brand"></div>
 
-                                <!-- Product Brand -->
-                                <p
-                                        x-show="product.brand"
-                                        class="text-sm text-gray-500 mb-2"
-                                        x-text="product.brand"
-                                ></p>
+                                <!-- Name -->
+                                <a :href="'product.html?id=' + product.id" class="block mt-1 text-lg font-medium hover:text-indigo-600" x-text="product.name"></a>
 
                                 <!-- Rating -->
-                                <div x-show="product.rating" class="flex items-center mb-3">
-                                    <div class="flex text-amber-400">
+                                <div class="mt-1 flex items-center">
+                                    <div class="flex text-yellow-400">
                                         <template x-for="i in 5">
-                                            <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    class="h-4 w-4"
-                                                    :class="i <= Math.round(product.rating) ? 'text-amber-400 fill-current' : 'text-gray-300 fill-current'"
-                                                    viewBox="0 0 20 20"
-                                            >
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :fill="i <= Math.round(product.rating) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                                             </svg>
                                         </template>
                                     </div>
-                                    <span x-show="product.reviews_count" class="text-xs text-gray-500 ml-1" x-text="`(${product.reviews_count})`"></span>
+                                    <span class="ml-1 text-sm text-gray-500">
+                                            (<span x-text="product.reviews_count"></span> reviews)
+                                        </span>
                                 </div>
 
-                                <!-- Product Description -->
-                                <p
-                                        x-show="product.description"
-                                        class="text-gray-600 mb-4 line-clamp-2 md:line-clamp-3"
-                                        x-text="product.description"
-                                ></p>
+                                <!-- Description -->
+                                <p class="mt-2 text-sm text-gray-600 line-clamp-2" x-text="product.description"></p>
 
-                                <!-- Badges -->
-                                <div class="flex flex-wrap mt-2 mb-4 gap-2">
-                                        <span
-                                                x-show="product.hasVariants || (product.options && Object.keys(product.options).length > 0)"
-                                                class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded"
-                                        >Options Available</span>
-                                    <span
-                                            x-show="product.isFeatured"
-                                            class="px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded"
-                                    >Featured</span>
-                                    <span
-                                            x-show="product.isOnSale || formatSalePrice(product)"
-                                            class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded"
-                                    >Sale</span>
+                                <!-- Product features -->
+                                <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
+                                    <template x-for="(value, key) in product.features" :key="key">
+                                        <div class="text-xs text-gray-500">
+                                            <span x-text="key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); }) + ':'"></span>
+                                            <span x-text="value" class="ml-1 text-gray-700"></span>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <!-- Product Price -->
+                            <div class="mt-4 flex items-center justify-between">
+                                <!-- Price -->
                                 <div class="flex items-center">
-                                        <span
-                                                x-show="formatSalePrice(product)"
-                                                class="text-xl font-semibold text-indigo-600"
-                                                x-text="formatSalePrice(product)"
-                                        ></span>
-                                    <span
-                                            class="text-xl font-semibold"
-                                            :class="{'text-gray-900': !formatSalePrice(product), 'text-gray-500 line-through ml-2 text-base': formatSalePrice(product)}"
-                                            x-text="formatPrice(product)"
-                                    ></span>
+                                    <template x-if="product.salePrice">
+                                        <div>
+                                            <span class="line-through text-gray-400 text-sm" x-text="'$' + product.base_price.toFixed(2)"></span>
+                                            <span class="ml-1 text-red-600 font-semibold text-lg" x-text="'$' + product.salePrice.toFixed(2)"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!product.salePrice">
+                                        <span class="font-semibold text-lg" x-text="'$' + product.base_price.toFixed(2)"></span>
+                                    </template>
                                 </div>
 
-                                <!-- Add to Cart -->
-                                <button
-                                        @click="addToCart(product)"
-                                        class="py-2 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors"
-                                        :class="{'opacity-50 cursor-not-allowed': product.stock === 0}"
-                                        :disabled="product.stock === 0"
-                                >
-                                    <span x-show="product.hasVariants || (product.options && Object.keys(product.options).length > 0)">View Options</span>
-                                    <span x-show="!(product.hasVariants || (product.options && Object.keys(product.options).length > 0))">
-                                            <span x-show="product.stock === 0">Out of Stock</span>
-                                            <span x-show="product.stock !== 0">Add to Cart</span>
-                                        </span>
+                                <!-- Add to cart button -->
+                                <button @click.stop.prevent="$store.cart.addItem(product); $event.target.classList.add('animate-pulse'); setTimeout(() => $event.target.classList.remove('animate-pulse'), 1000)"
+                                        class="bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                    Add to Cart
                                 </button>
                             </div>
                         </div>
                     </div>
-                </template>
-            </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- No results message -->
+        <div x-show="getFilteredProducts().length === 0" class="bg-white rounded-lg shadow-sm p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-semibold text-gray-700">No products found</h3>
+            <p class="mt-2 text-gray-500">Try changing your search or filter criteria</p>
+            <button @click="clearFilters()" class="mt-4 inline-block bg-indigo-600 text-white py-2 px-4 rounded-md text-sm hover:bg-indigo-700">
+                Clear All Filters
+            </button>
         </div>
     </div>
-</main>
+</div>
 
-<!-- Footer would go here -->
-<footer class="bg-gray-800 text-white mt-12 py-8">
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-12">
     <div class="container mx-auto px-4">
-        <p class="text-center">© 2025 Your Store. All rights reserved.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Shop</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-300 hover:text-white">New Arrivals</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Best Sellers</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Deals & Promotions</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Gift Cards</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Customer Service</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-300 hover:text-white">Contact Us</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Shipping & Returns</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">FAQ</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Size Guide</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Stay Connected</h3>
+                <p class="text-gray-300 mb-4">Subscribe to our newsletter for updates on new products and special promotions.</p>
+                <form class="flex">
+                    <input type="email" placeholder="Your email address" class="flex-1 px-4 py-2 rounded-l-md focus:outline-none">
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ShopEase. All rights reserved.</p>
+        </div>
     </div>
 </footer>
 
 <!-- Cart Notification -->
-<div
-        x-data
-        x-show="$store.ui.showCartNotification"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 transform translate-y-2"
-        x-transition:enter-end="opacity-100 transform translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 transform translate-y-0"
-        x-transition:leave-end="opacity-0 transform translate-y-2"
-        class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded shadow-lg flex items-center"
->
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+<div x-show="$store.ui.showCartNotification" x-cloak
+     class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100 transform translate-y-0"
+     x-transition:leave-end="opacity-0 transform translate-y-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
     </svg>
-    Product added to cart!
+    Item added to your cart!
 </div>
 
-<script>
-    // This script assumes PRODUCTS and CATEGORIES constants are defined elsewhere in your project
-    // You mentioned these already exist, so we're not defining them here
-</script>
+<!-- Scroll To Top Button -->
+<button @click="$store.ui.scrollToTop()"
+        class="fixed bottom-4 right-20 bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
+        x-data="{ showButton: false }"
+        @scroll.window="showButton = window.pageYOffset > 500"
+        x-show="showButton"
+        x-transition.opacity>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+    </svg>
+</button>
+
+<!-- WhatsApp Contact Button -->
+<button @click="$store.ui.openWhatsApp('Hello, I have a question about your products.')"
+        class="fixed bottom-20 right-4 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+    </svg>
+</button>
 </body>
 </html>

@@ -10,8 +10,12 @@ $jsFiles = glob($projectDirectory . '/js/*.js');
 
 // Add additional files manually
 $additionalFiles = [
-    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
-    'C:\xampp\htdocs\subdomain-shop\js\main.js',
+    'C:\xampp\htdocs\subdomain-new-standards\index.html',
+    'C:\xampp\htdocs\subdomain-new-standards\js\categories.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\products.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-core.js',
+//    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
+//    'C:\xampp\htdocs\subdomain-shop\js\main.js',
     // Add other important files you want to include
 ];
 
@@ -26,7 +30,7 @@ $allFiles = array_unique($allFiles);
 $finalContent = '';
 
 // Process each file
-foreach ($allFiles as $index => $targetFile) {
+foreach ($additionalFiles as $index => $targetFile) {
     // Check if file exists
     if (!file_exists($targetFile)) {
         echo "Warning: File does not exist: {$targetFile}\n";
