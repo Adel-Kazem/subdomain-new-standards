@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pure Whey Isolate | FitFuel</title>
+    <title>Premium Cotton Graphic T-Shirt | Urban Threads</title>
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Product Viewer Component (simple file inclusion) -->
+    <script src="js/alpine-product-viewer.js"></script>
 </head>
 <body class="bg-gray-50 p-4 md:p-8">
 <!-- Product Viewer Component -->
@@ -67,6 +69,18 @@
                                 </div>
                             </template>
                         </template>
+                    </template>
+
+                    <!-- Variant images -->
+                    <template x-for="(img, variantKey) in product.variant_images" :key="variantKey">
+                        <div
+                                @click="selectImage(Array.isArray(img) ? img[0] : img); selectVariantFromKey(variantKey)"
+                                :class="{ 'ring-2 ring-indigo-500': selectedImage === (Array.isArray(img) ? img[0] : img), 'hover:ring-2 hover:ring-gray-300': selectedImage !== (Array.isArray(img) ? img[0] : img) }"
+                                class="flex-shrink-0 cursor-pointer rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105 relative"
+                        >
+                            <img :src="Array.isArray(img) ? img[0] : img" :alt="`Variant ${variantKey}`" class="h-20 w-20 object-cover" @error="handleImageError">
+                            <span class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center" x-text="formatVariantName(variantKey)"></span>
+                        </div>
                     </template>
                 </div>
 
@@ -171,268 +185,8 @@
     </div>
 </div>
 
-<!-- Alpine.js Product Viewer Component -->
+<!-- Product Data Initialization -->
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('productViewer', function(product) {
-            return {
-                product: product,
-                selectedImage: '',
-                selectedOptions: {},
-                isScrollLeftEnd: true,
-                isScrollRightEnd: false,
-
-                init() {
-                    if (this.product) {
-                        // Initialize selected image
-                        this.selectedImage = this.product.images && this.product.images.length > 0
-                            ? this.product.images[0]
-                            : '';
-
-                        // Initialize selected options
-                        this.selectedOptions = {};
-                        if (this.product.options) {
-                            for (const option in this.product.options) {
-                                if (this.product.options[option] && this.product.options[option].length > 0) {
-                                    this.selectedOptions[option] = this.product.options[option][0];
-                                }
-                            }
-                        }
-
-                        // Initialize scroll position check
-                        setTimeout(() => {
-                            this.checkScrollPosition();
-                        }, 100);
-                    }
-                },
-
-                hasThumbnails() {
-                    let count = 0;
-
-                    // Count main images
-                    count += this.product.images ? this.product.images.length : 0;
-
-                    // Count option images
-                    if (this.product.option_images) {
-                        for (const optionType in this.product.option_images) {
-                            for (const optionValue in this.product.option_images[optionType]) {
-                                count += this.product.option_images[optionType][optionValue].length;
-                            }
-                        }
-                    }
-
-                    // Count variant images
-                    if (this.product.variant_images) {
-                        for (const key in this.product.variant_images) {
-                            if (Array.isArray(this.product.variant_images[key])) {
-                                count += this.product.variant_images[key].length;
-                            } else {
-                                count += 1;
-                            }
-                        }
-                    }
-
-                    return count > 1;
-                },
-
-                formatPrice(price) {
-                    return '$' + parseFloat(price).toFixed(2);
-                },
-
-                formatOptionName(name) {
-                    return name.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-                },
-
-                formatFeatureKey(key) {
-                    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                },
-
-                formatVariantName(variant) {
-                    return variant
-                        .split('|')
-                        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-                        .join(' + ');
-                },
-
-                calculateCurrentPrice() {
-                    if (!this.product) return 0;
-                    let price = parseFloat(this.product.base_price);
-
-                    // Add option price adjustments
-                    if (this.product.option_price_adjustments) {
-                        for (const option in this.selectedOptions) {
-                            const value = this.selectedOptions[option];
-                            if (
-                                this.product.option_price_adjustments[option] &&
-                                this.product.option_price_adjustments[option][value] !== undefined
-                            ) {
-                                price += parseFloat(this.product.option_price_adjustments[option][value]);
-                            }
-                        }
-                    }
-
-                    return price;
-                },
-
-                getShippingInfo() {
-                    if (!this.product) return '';
-                    if (this.product.free_shipping) {
-                        return "Free Shipping";
-                    }
-
-                    let shippingCost = parseFloat(this.product.base_shipping_cost);
-
-                    // Add shipping adjustments
-                    if (this.product.option_shipping_adjustments) {
-                        for (const option in this.selectedOptions) {
-                            const value = this.selectedOptions[option];
-                            if (
-                                this.product.option_shipping_adjustments[option] &&
-                                this.product.option_shipping_adjustments[option][value] !== undefined
-                            ) {
-                                shippingCost += parseFloat(this.product.option_shipping_adjustments[option][value]);
-                            }
-                        }
-                    }
-
-                    if (shippingCost <= 0) {
-                        return "Free Shipping";
-                    }
-
-                    return `$${shippingCost.toFixed(2)} Shipping`;
-                },
-
-                getInventoryForSelection() {
-                    if (!this.product) return 0;
-                    if (!this.product.hasVariants) {
-                        return this.product.stock;
-                    }
-
-                    const parts = [];
-                    let complete = true;
-
-                    for (const option in this.product.options) {
-                        if (!this.selectedOptions[option]) {
-                            complete = false;
-                            break;
-                        }
-                        parts.push(this.selectedOptions[option]);
-                    }
-
-                    if (!complete) return 0;
-
-                    const key = parts.join('|');
-                    return this.product.option_variants_stock[key] || 0;
-                },
-
-                getSelectedImage() {
-                    if (!this.product) return '';
-
-                    try {
-                        // If an image has been manually selected, use that
-                        if (this.selectedImage) {
-                            return this.selectedImage;
-                        }
-
-                        // Check if there's a specific variant image
-                        if (this.product.variant_images) {
-                            // Build a key from selected options
-                            const parts = [];
-                            for (const option in this.selectedOptions) {
-                                parts.push(this.selectedOptions[option]);
-                            }
-
-                            if (parts.length > 0) {
-                                const variantKey = parts.join('|');
-                                if (this.product.variant_images[variantKey]) {
-                                    const variantImage = this.product.variant_images[variantKey];
-                                    return Array.isArray(variantImage) ? variantImage[0] : variantImage;
-                                }
-                            }
-                        }
-
-                        // Check for option-specific images
-                        if (this.product.option_images) {
-                            for (const option in this.selectedOptions) {
-                                const value = this.selectedOptions[option];
-                                if (
-                                    this.product.option_images[option] &&
-                                    this.product.option_images[option][value] &&
-                                    this.product.option_images[option][value].length > 0
-                                ) {
-                                    return this.product.option_images[option][value][0];
-                                }
-                            }
-                        }
-
-                        // Default to first product image
-                        return this.product.images && this.product.images.length > 0
-                            ? this.product.images[0]
-                            : '';
-                    } catch (error) {
-                        console.error("Error in getSelectedImage:", error);
-                        return this.product.images && this.product.images.length > 0
-                            ? this.product.images[0]
-                            : '';
-                    }
-                },
-
-                selectImage(image) {
-                    this.selectedImage = image;
-                },
-
-                selectOption(option, value) {
-                    this.selectedOptions[option] = value;
-                    // Reset selected image to force selection based on variant
-                    this.selectedImage = '';
-                },
-
-                selectOptionFromImage(optionType, optionValue) {
-                    this.selectedOptions[optionType] = optionValue;
-                },
-
-                selectVariantFromKey(key) {
-                    const parts = key.split('|');
-                    const optionNames = Object.keys(this.product.options);
-
-                    for (let i = 0; i < Math.min(parts.length, optionNames.length); i++) {
-                        this.selectedOptions[optionNames[i]] = parts[i];
-                    }
-                },
-
-                handleImageError(event) {
-                    event.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
-                },
-
-                // Thumbnail scrolling
-                scrollThumbnails(direction) {
-                    const container = this.$refs.thumbnailsContainer;
-                    if (!container) return;
-
-                    const scrollAmount = container.clientWidth * 0.75;
-
-                    if (direction === 'left') {
-                        container.scrollLeft -= scrollAmount;
-                    } else {
-                        container.scrollLeft += scrollAmount;
-                    }
-
-                    setTimeout(() => {
-                        this.checkScrollPosition();
-                    }, 100);
-                },
-
-                checkScrollPosition() {
-                    const container = this.$refs.thumbnailsContainer;
-                    if (!container) return;
-
-                    this.isScrollLeftEnd = container.scrollLeft <= 0;
-                    this.isScrollRightEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
-                }
-            };
-        });
-    });
-
     // Initialize the product data
     const product = {
         // Basic Information
