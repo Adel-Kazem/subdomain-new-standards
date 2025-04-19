@@ -12,12 +12,15 @@ $jsFiles = glob($projectDirectory . '/js/*.js');
 $additionalFiles = [
 //    'C:\xampp\htdocs\subdomain-new-standards\index.html',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\categories.js',
-    'C:\xampp\htdocs\subdomain-new-standards\js\products.js',
+//    'C:\xampp\htdocs\subdomain-new-standards\js\products.js',
     'C:\xampp\htdocs\subdomain-new-standards\js\cart-page.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-whatsapp.js',
+    'C:\xampp\htdocs\subdomain-new-standards\product.html',
+    'C:\xampp\htdocs\subdomain-new-standards\cart.html',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-core.js',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\alpine-product-viewer.js',
     'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
-    'C:\xampp\htdocs\subdomain-new-standards\checkout.html',
+//    'C:\xampp\htdocs\subdomain-new-standards\checkout.html',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
 //    'C:\xampp\htdocs\subdomain-shop\js\main.js',
     // Add other important files you want to include
@@ -64,7 +67,7 @@ if (!empty($finalContent)) {
     if ($result === false) {
         echo "Error: Unable to write to the file {$outputFile}\n";
     } else {
-        echo "Successfully copied the content of " . count($allFiles) . " files to {$outputFile}\n";
+        echo "Successfully copied the content of " . count($additionalFiles) . " files to {$outputFile}\n";
     }
 } else {
     echo "Error: No content was retrieved from the files\n";

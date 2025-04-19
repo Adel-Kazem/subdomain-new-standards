@@ -183,6 +183,57 @@ document.addEventListener('alpine:init', () => {
                 } else {
                     return 'border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed';
                 }
+            },
+
+            // Add this method to the productDetail component
+            inquireViaWhatsApp() {
+                // Format options for display
+                const formattedOptions = Object.entries(this.selectedOptions)
+                    .map(([option, value]) => {
+                        // Format option name (convert snake_case to Title Case)
+                        const formattedOption = option.replace(/_/g, ' ')
+                            .replace(/\b\w/g, char => char.toUpperCase());
+                        return `${formattedOption}: ${value}`;
+                    })
+                    .join(', ');
+
+                // Get current price
+                const price = this.getVariantPrice();
+
+                // Build message
+                let message = `Hello, I'm interested in: *${this.product.name}*\n\n`;
+
+                // Add options if any
+                if (Object.keys(this.selectedOptions).length > 0) {
+                    message += `*Selected Options:* ${formattedOptions}\n`;
+                }
+
+                // Add quantity and price
+                message += `*Quantity:* ${this.quantity}\n`;
+                message += `*Price:* $${price.toFixed(2)}\n\n`;
+
+                // Add stock information
+                const stock = this.getVariantStock();
+                if (stock > 0) {
+                    message += `*Stock Status:* Available (${stock} in stock)\n\n`;
+                } else {
+                    message += `*Stock Status:* Currently out of stock\n\n`;
+                }
+
+                // Add product URL to reference
+                message += `Product Link: ${window.location.href}\n\n`;
+
+                // Add inquiry message
+                message += "I'd like to know more about this product. Can you please provide additional information on availability, shipping options, and payment methods?";
+
+                // Encode the message for URL
+                const encodedMessage = encodeURIComponent(message);
+
+                // WhatsApp business number from your code
+                const phoneNumber = '96170608543';
+
+                // Open WhatsApp with the message
+                window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
             }
         };
     });
