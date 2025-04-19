@@ -10,11 +10,14 @@ $jsFiles = glob($projectDirectory . '/js/*.js');
 
 // Add additional files manually
 $additionalFiles = [
-    'C:\xampp\htdocs\subdomain-new-standards\index.html',
-    'C:\xampp\htdocs\subdomain-new-standards\js\categories.js',
+//    'C:\xampp\htdocs\subdomain-new-standards\index.html',
+//    'C:\xampp\htdocs\subdomain-new-standards\js\categories.js',
     'C:\xampp\htdocs\subdomain-new-standards\js\products.js',
-    'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-core.js',
-    'C:\xampp\htdocs\subdomain-new-standards\js\alpine-product-viewer.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\cart-page.js',
+//    'C:\xampp\htdocs\subdomain-new-standards\js\ecommerce-core.js',
+//    'C:\xampp\htdocs\subdomain-new-standards\js\alpine-product-viewer.js',
+    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
+    'C:\xampp\htdocs\subdomain-new-standards\checkout.html',
 //    'C:\xampp\htdocs\subdomain-new-standards\js\app.js',
 //    'C:\xampp\htdocs\subdomain-shop\js\main.js',
     // Add other important files you want to include
